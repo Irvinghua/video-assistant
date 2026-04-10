@@ -1,0 +1,82 @@
+import { useState, useEffect } from "react"
+import type { PlasmoCSConfig, PlasmoGetOverlayAnchor, PlasmoGetShadowHostId } from "plasmo"
+import cssText from "data-text:~style.css"
+
+import { BilibiliService } from "../services/platform/bilibili/BilibiliService"
+import { Sidebar } from "../components/Sidebar"
+import { ToggleButton } from "../components/ToggleButton"
+
+export const config: PlasmoCSConfig = {
+    matches: ["https://www.bilibili.com/video/*"],
+    all_frames: false
+}
+
+export const getStyle = () => {
+    const style = document.createElement("style")
+    style.textContent = cssText
+    return style
+}
+
+// Mount at the body level for proper fixed positioning
+export const getShadowHostId: PlasmoGetShadowHostId = () =>
+    "video-assistant-bilibili"
+
+// Ensure the shadow host itself is positioned correctly
+export const getOverlayAnchor: PlasmoGetOverlayAnchor = async () =>
+    document.body
+
+// Make the shadow host cover the viewport so fixed positioning works inside
+export const getShadowHostStyle = () => {
+    const style = document.createElement("style")
+    style.textContent = `
+        #video-assistant-bilibili {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            z-index: 2147483647 !important;
+            pointer-events: none !important;
+        }
+        #video-assistant-bilibili > * {
+            pointer-events: auto !important;
+        }
+    `
+    return style
+}
+
+const service = new BilibiliService()
+
+const BilibiliCS = () => {
+    const [isOpen, setIsOpen] = useState(false)
+    const [isDark, setIsDark] = useState(false)
+
+    // Detect Bilibili Dark Mode
+    useEffect(() => {
+        console.log("BilibiliCS mounted")
+        const checkTheme = () => {
+            const html = document.documentElement
+            const isDarkMode =
+                html.classList.contains("dark") ||
+                html.classList.contains("bili-theme-dark") ||
+                html.getAttribute("data-theme") === "dark"
+            setIsDark(isDarkMode)
+        }
+
+        checkTheme()
+
+        const observer = new MutationObserver(checkTheme)
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] })
+
+        return () => observer.disconnect()
+    }, [])
+
+    return (
+        <div className={isDark ? "dark" : ""} style={{ pointerEvents: "auto" }}>
+            <ToggleButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
+            <Sidebar service={service} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+        </div>
+    )
+}
+
+export default BilibiliCS
