@@ -18,7 +18,13 @@ export interface Comment {
     text: string
     likes: number
     date: number
-    replies?: number
+    replyCount?: number
+    replies?: Comment[]
+}
+
+export interface SampledComments {
+    consensus: Comment[]
+    controversial: Comment[]
 }
 
 export interface IPlatformService {
@@ -38,9 +44,9 @@ export interface IPlatformService {
     getSubtitles(videoId: string): Promise<SubtitleSegment[]>
 
     /**
-     * Get comments for the video
+     * Get sampled comments for analysis (consensus + controversial pools).
      */
-    getComments(videoId: string, limit?: number): Promise<Comment[]>
+    getComments(videoId: string): Promise<SampledComments>
 
     /**
      * Whether this platform supports digital audio extraction for ASR
@@ -51,6 +57,12 @@ export interface IPlatformService {
      * Get direct digital audio URL if possible
      */
     getAudioUrl(videoId: string): Promise<string | null>
+
+    /**
+     * Return candidate audio URLs (primary + backups) for resilient download.
+     * Defaults to [getAudioUrl()] when not overridden.
+     */
+    getAudioUrlCandidates?(videoId: string): Promise<string[]>
 
     /**
      * Control video player

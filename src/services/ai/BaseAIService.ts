@@ -27,8 +27,8 @@ export abstract class BaseAIService implements IAIService {
         }
     }
 
-    async analyzeComments(comments: string[], opts?: any): Promise<CommentAnalysis> {
-        const response = await this.chat([{ role: "user", content: Prompts.analyzeComments(comments.join("\n")) }])
+    async analyzeComments(videoOverview: string, samplesJson: string): Promise<CommentAnalysis> {
+        const response = await this.chat([{ role: "user", content: Prompts.analyzeComments(videoOverview, samplesJson) }])
         try {
             const jsonMatch = response.match(/\{[\s\S]*\}/)
             return JSON.parse(jsonMatch ? jsonMatch[0] : response)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
-import type { CommentAnalysis } from "../services/ai/types"
+import type { CommentAnalysis, SummaryResult } from "../services/ai/types"
 import { CommentAnalyzer } from "../services/summarizer/CommentAnalyzer"
+import { VideoSummarizer } from "../services/summarizer/VideoSummarizer"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { useVideo } from "../contexts/VideoContext"
 
@@ -12,7 +13,7 @@ export interface UseCommentAnalysisResult {
 }
 
 export function useCommentAnalysis(): UseCommentAnalysisResult {
-    const { videoInfo, platform, comments } = useVideo()
+    const { videoInfo, platform, sampledComments, subtitles, setSummaryResult } = useVideo()
     const videoId = videoInfo?.id
 
     const [analysis, setAnalysis] = useState<CommentAnalysis | null>(null)
@@ -33,16 +34,39 @@ export function useCommentAnalysis(): UseCommentAnalysisResult {
         }
     }
 
+    const resolveVideoOverview = async (): Promise<string> => {
+        if (!videoId) throw new Error("No video detected.")
+
+        const cachedSummary = await cacheService.get<SummaryResult>(cacheKeys.summary(platform, videoId))
+        if (cachedSummary) {
+            const overview = cachedSummary.fullDigest || cachedSummary.oneLiner || ""
+            if (overview) return overview
+        }
+
+        if (subtitles.length === 0) {
+            throw new Error("请先生成视频摘要（Summarize 或 Summarize via ASR），再分析评论。")
+        }
+
+        console.log("[useCommentAnalysis] No cached summary, generating from subtitles...")
+        const generated = await new VideoSummarizer().summarize(subtitles)
+        await cacheService.set(cacheKeys.summary(platform, videoId), generated)
+        setSummaryResult(generated)
+        return generated.fullDigest || generated.oneLiner || ""
+    }
+
     const handleAnalyze = async () => {
-        if (!comments.length) { setError("No comments available to analyze."); return }
+        if (!videoId) return
+        if (!sampledComments || (sampledComments.consensus.length === 0 && sampledComments.controversial.length === 0)) {
+            setError("No comments available to analyze.")
+            return
+        }
         setLoading(true)
         setError("")
         try {
-            const result = await new CommentAnalyzer().analyze(comments)
+            const overview = await resolveVideoOverview()
+            const result = await new CommentAnalyzer().analyze(sampledComments, overview)
             setAnalysis(result)
-            if (videoId) {
-                await cacheService.set(cacheKeys.comments(platform, videoId), result, 24 * 60 * 60)
-            }
+            await cacheService.set(cacheKeys.comments(platform, videoId), result, 24 * 60 * 60)
         } catch (err) {
             setError((err as Error).message)
         } finally {

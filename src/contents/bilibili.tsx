@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import type { PlasmoCSConfig, PlasmoGetOverlayAnchor, PlasmoGetShadowHostId } from "plasmo"
+import type { PlasmoCSConfig, PlasmoGetShadowHostId } from "plasmo"
 import cssText from "data-text:~style.css"
 
 import { BilibiliService } from "../services/platform/bilibili/BilibiliService"
@@ -17,15 +17,9 @@ export const getStyle = () => {
     return style
 }
 
-// Mount at the body level for proper fixed positioning
 export const getShadowHostId: PlasmoGetShadowHostId = () =>
     "video-assistant-bilibili"
 
-// Ensure the shadow host itself is positioned correctly
-export const getOverlayAnchor: PlasmoGetOverlayAnchor = async () =>
-    document.body
-
-// Make the shadow host cover the viewport so fixed positioning works inside
 export const getShadowHostStyle = () => {
     const style = document.createElement("style")
     style.textContent = `

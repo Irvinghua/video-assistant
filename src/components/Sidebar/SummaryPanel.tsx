@@ -55,26 +55,26 @@ export function SummaryPanel() {
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-                    <p className="text-gray-800 dark:text-gray-200 text-sm italic font-medium">"{summary.oneLiner}"</p>
+                    <p className="text-gray-800 dark:text-gray-200 italic font-medium" style={{ fontSize: "15px", lineHeight: "1.6" }}>"{summary.oneLiner}"</p>
                 </div>
 
                 <section>
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 border-b pb-1 text-[10px] uppercase opacity-50">Digest</h3>
-                    <article className="prose prose-sm dark:prose-invert text-xs text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 border-b pb-1 text-sm uppercase opacity-50">Digest</h3>
+                    <article className="prose dark:prose-invert text-gray-700 dark:text-gray-300 whitespace-pre-wrap" style={{ fontSize: "14px", lineHeight: "1.8" }}>
                         {summary.fullDigest}
                     </article>
                 </section>
 
                 <section>
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-3 border-b pb-1 text-[10px] uppercase opacity-50">Key Points</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-3 border-b pb-1 text-sm uppercase opacity-50">Key Points</h3>
                     <div className="space-y-4">
                         {summary.chapters.map((chapter, idx) => (
                             <div key={idx} className="group cursor-pointer" onClick={() => seekTo(chapter.timestamp)}>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-mono bg-blue-600 text-white px-1 py-0.5 rounded">{formatTime(chapter.timestamp)}</span>
-                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 text-xs">{chapter.title}</h4>
+                                    <span className="font-mono bg-blue-600 text-white px-1.5 py-0.5 rounded" style={{ fontSize: "12px" }}>{formatTime(chapter.timestamp)}</span>
+                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600" style={{ fontSize: "14px" }}>{chapter.title}</h4>
                                 </div>
-                                <p className="text-[11px] text-gray-600 dark:text-gray-400 ml-1 pl-3 border-l-2 border-gray-100 dark:border-gray-800">{chapter.summary}</p>
+                                <p className="text-gray-600 dark:text-gray-400 ml-1 pl-3 border-l-2 border-gray-100 dark:border-gray-800" style={{ fontSize: "14px", lineHeight: "1.7" }}>{chapter.summary}</p>
                             </div>
                         ))}
                     </div>

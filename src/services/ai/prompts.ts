@@ -37,19 +37,39 @@ For "timestamp" in "chapters", convert the [MM:SS] format back to total seconds 
 Make sure the chapters reflect the logical structure of the video.`,
 
     /**
-     * Analyzes comment sentiment and clusters viewpoints.
+     * Deep analysis of video comment samples against the video's own overview.
+     * `samplesJson` carries two pools: consensusPool (top-hot L1) and
+     * controversialThreads (high-dispute L1 with their top L2 replies).
      */
-    analyzeComments: (commentsText: string) =>
-        `Analyze the following comments.
-Output JSON:
-{
-  "clusters": [{ "label": "Label", "ratio": 0.5, "examples": ["comment1"] }],
-  "sentiment": { "positive": 0.8, "negative": 0.1, "neutral": 0.1 },
-  "controversies": [{ "topic": "Topic", "agreed": "Agreed point", "disagreed": "Disagreed point" }]
-}
+    analyzeComments: (videoOverview: string, samplesJson: string) =>
+        `角色：你是一位深度社交媒体分析师，擅长从碎片化评论中通过对比视频本体内容，提炼群体心理与舆论风向。
 
-Comments:
-${commentsText}`,
+【视频核心摘要】
+${videoOverview}
+
+【精选评论样本（JSON）】
+- consensusPool：按热度排序的高赞一级评论，代表大多数共识。
+- controversialThreads：争议指数高的一级评论，每条附带 topReplies（高赞二级回复），体现分歧或辩论。
+
+${samplesJson}
+
+任务：结合视频核心摘要与评论样本，做深度的共识与分歧分析。
+要求：
+- 共识提取：列出若干被反复提及且点赞极高的观点（heat=extreme/high/medium 表示支撑热度）。
+- 分歧解剖：针对 controversialThreads 中的每条线程或跨线程的对立话题，提炼 A 派与 B 派核心论点，并判断分歧根源（视频逻辑缺陷 / 立场偏见 / 认知差异 / 事实争议 等）。
+- 信息偏离度 (The Gap)：对比视频摘要，指出评论命中的主内容 (hit)，以及视频未覆盖但评论热议的话题 / 被观众忽视的视频重点 (miss)。
+- 舆情氛围 (mood)：用 3 个中文关键词概括评论区情绪。
+- 独立见解 (spotlight)：提取 1-2 条高信息增量的专业评论或神回复（引用原文，简短）。
+
+仅输出 JSON（不要 markdown 包裹，不要额外解释），schema：
+{
+  "consensus": [{ "point": "string", "heat": "extreme" | "high" | "medium" }],
+  "divergences": [{ "topic": "string", "sideA": "string", "sideB": "string", "rootCause": "string" }],
+  "gap": { "hit": "string", "miss": "string" },
+  "mood": ["string", "string", "string"],
+  "spotlight": ["string"]
+}
+输出语言：中文。`,
 
     /**
      * Summarizes a transcript chunk for mind map pre-processing.

@@ -3,7 +3,7 @@ import type { SummaryResult } from "../services/ai/types"
 import type { SubtitleSegment } from "../services/platform/types"
 import { VideoSummarizer } from "../services/summarizer/VideoSummarizer"
 import { ExportService } from "../services/export/ExportService"
-import { ASRServiceFactory } from "../services/asr/ASRServiceFactory"
+import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { useVideo } from "../contexts/VideoContext"
 
@@ -19,6 +19,38 @@ export interface UseSummaryResult {
     handleDigitalASR: () => Promise<void>
     handleExport: () => void
     handleClearCache: () => Promise<void>
+}
+
+/**
+ * Download audio directly from content-script context. SW fetches cannot
+ * set Referer (Chrome strips forbidden headers), and Bilibili CDN rejects
+ * cross-origin credentialed requests (ACAO:* conflicts with credentials).
+ * So we fetch from the page origin with credentials omitted, matching how
+ * the native <video> player sources each segment — `upsig` authenticates
+ * the URL, cookies aren't needed.
+ */
+async function downloadAudio(urls: string[]): Promise<Blob> {
+    const errors: string[] = []
+    for (const url of urls) {
+        try {
+            const res = await fetch(url, { credentials: "omit" })
+            if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`)
+            return await res.blob()
+        } catch (e) {
+            errors.push(`${url.substring(0, 80)}: ${(e as Error).message}`)
+            console.warn(`[useSummary] Candidate failed, trying next: ${(e as Error).message}`)
+        }
+    }
+    throw new Error(`All ${urls.length} audio URLs failed. Last errors:\n${errors.join("\n")}`)
+}
+
+async function resolveAudioUrls(service: any, videoId: string): Promise<string[]> {
+    if (typeof service.getAudioUrlCandidates === "function") {
+        const list = await service.getAudioUrlCandidates(videoId)
+        if (list?.length) return list
+    }
+    const single = await service.getAudioUrl(videoId)
+    return single ? [single] : []
 }
 
 export function useSummary(): UseSummaryResult {
@@ -86,23 +118,26 @@ export function useSummary(): UseSummaryResult {
         setError("")
         setAsrStep("getting_url")
         try {
-            const audioUrl = await service.getAudioUrl(videoId)
-            if (!audioUrl) throw new Error("This video stream does not support digital extraction.")
+            const urls = await resolveAudioUrls(service, videoId)
+            if (urls.length === 0) throw new Error("This video does not support audio extraction.")
+
             setAsrStep("downloading")
-            const response = await fetch(audioUrl, {
-                headers: {
-                    "Referer": window.location.href,
-                    "User-Agent": navigator.userAgent,
-                    "Range": "bytes=0-"
+            const audioBlob = await downloadAudio(urls)
+            console.log(`[useSummary] Audio downloaded: ${(audioBlob.size / 1024 / 1024).toFixed(1)} MB, type=${audioBlob.type}`)
+
+            setAsrStep("transcribing")
+            const result = await transcribeLongAudio(audioBlob, (p) => {
+                if (p.phase === "transcribing" && p.total) {
+                    console.log(`[useSummary] Transcribing chunk ${p.current}/${p.total}`)
                 }
             })
-            if (!response.ok) throw new Error(`Failed to download audio: ${response.statusText}`)
-            const audioBlob = await response.blob()
-            setAsrStep("transcribing")
-            const transcript = await (await ASRServiceFactory.getService()).transcribe(audioBlob)
-            if (!transcript) throw new Error("Transcription result is empty.")
-            const asrSubs: SubtitleSegment[] = [{ start: 0, end: 0, text: transcript }]
+            if (!result.text) throw new Error("Transcription result is empty.")
+
+            const asrSubs: SubtitleSegment[] = result.segments.length > 0
+                ? result.segments
+                : [{ start: 0, end: 0, text: result.text }]
             setSubtitles(asrSubs)
+
             setAsrStep("summarizing")
             await handleSummarize(asrSubs)
         } catch (err) {

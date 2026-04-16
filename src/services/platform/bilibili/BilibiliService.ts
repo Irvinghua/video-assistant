@@ -1,4 +1,4 @@
-import type { IPlatformService, VideoInfo, SubtitleSegment, Comment } from "../types"
+import type { IPlatformService, VideoInfo, SubtitleSegment, SampledComments } from "../types"
 import { getBilibiliSubtitles } from "./subtitleFetcher"
 import { getBilibiliComments } from "./commentFetcher"
 
@@ -36,8 +36,8 @@ export class BilibiliService implements IPlatformService {
         return getBilibiliSubtitles(videoId)
     }
 
-    async getComments(videoId: string, limit: number = 100): Promise<Comment[]> {
-        return getBilibiliComments(videoId, limit)
+    async getComments(videoId: string): Promise<SampledComments> {
+        return getBilibiliComments(videoId)
     }
 
     supportsDigitalASR(): boolean {
@@ -45,31 +45,52 @@ export class BilibiliService implements IPlatformService {
     }
 
     async getAudioUrl(bvid: string): Promise<string | null> {
-        try {
-            console.log(`[BilibiliService] Getting audio URL for ${bvid}`)
-            const viewData = await this.bgFetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`)
-            const cid = viewData?.data?.cid
-            if (!cid) return null
+        const urls = await this.getAudioUrlCandidates(bvid)
+        return urls[0] ?? null
+    }
 
-            // Get DASH playurl
+    /**
+     * Return a list of candidate audio URLs (base_url first, then backup_url[]).
+     * Callers should try each in order until one succeeds.
+     */
+    async getAudioUrlCandidates(bvid: string): Promise<string[]> {
+        try {
+            console.log(`[BilibiliService] Getting audio URL candidates for ${bvid}`)
+
+            // Resolve cid for the current page (supports multi-P via ?p=N)
+            const viewData = await this.bgFetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`)
+            const params = new URLSearchParams(window.location.search)
+            const pIdx = Math.max(1, parseInt(params.get("p") || "1", 10))
+            const cid = viewData?.data?.pages?.[pIdx - 1]?.cid ?? viewData?.data?.cid
+            if (!cid) return []
+
             const playUrlData = await this.bgFetch(
                 `https://api.bilibili.com/x/player/playurl?bvid=${bvid}&cid=${cid}&qn=16&fnval=16`
             )
 
-            // Dash audio usually has better quality and is more stable
-            let audioUrl = playUrlData?.data?.dash?.audio?.[0]?.baseUrl 
-                || playUrlData?.data?.dash?.audio?.[0]?.base_url
+            const audioList: any[] = playUrlData?.data?.dash?.audio || []
+            if (audioList.length > 0) {
+                // Pick the lowest-bitrate stream — ASR only needs 16kHz mono,
+                // so 64kbps AAC (id=30216) is plenty and saves download/memory cost.
+                const sorted = [...audioList].sort((a, b) => (a.bandwidth || 0) - (b.bandwidth || 0))
+                const picked = sorted.find((s) => s.id === 30216) || sorted[0]
+                console.log(
+                    `[BilibiliService] Picked audio id=${picked.id} bandwidth=${picked.bandwidth}`
+                )
 
-            // Fallback to flv/mp4 audio if dash is not available
-            if (!audioUrl && playUrlData?.data?.durl?.[0]?.url) {
-                audioUrl = playUrlData.data.durl[0].url
+                const primary = picked.base_url || picked.baseUrl
+                const backups: string[] = picked.backup_url || picked.backupUrl || []
+                return [primary, ...backups].filter(Boolean)
             }
-            
-            console.log(`[BilibiliService] Found audio URL: ${audioUrl ? 'Yes' : 'No'}`)
-            return audioUrl || null
+
+            // Legacy FLV/MP4 fallback (very old videos without DASH)
+            const durlUrl = playUrlData?.data?.durl?.[0]?.url
+            if (durlUrl) return [durlUrl]
+
+            return []
         } catch (e) {
-            console.error("[BilibiliService] Failed to get audio URL:", e)
-            return null
+            console.error("[BilibiliService] Failed to get audio URL candidates:", e)
+            return []
         }
     }
 

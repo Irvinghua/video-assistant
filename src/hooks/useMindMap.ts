@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { AIServiceFactory } from "../services/ai/AIServiceFactory"
-import { ASRServiceFactory } from "../services/asr/ASRServiceFactory"
+import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { Prompts } from "../services/ai/prompts"
 import { chunkText } from "../utils/textChunker"
@@ -17,6 +17,20 @@ export interface UseMindMapResult {
     asrStep: MindMapASRStep
     checkCacheAndGenerate: () => Promise<void>
     handleDigitalASR: () => Promise<void>
+}
+
+async function downloadFirstSuccess(urls: string[]): Promise<Blob> {
+    const errors: string[] = []
+    for (const url of urls) {
+        try {
+            const res = await fetch(url, { credentials: "omit" })
+            if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`)
+            return await res.blob()
+        } catch (e) {
+            errors.push(`${url.substring(0, 80)}: ${(e as Error).message}`)
+        }
+    }
+    throw new Error(`All ${urls.length} audio URLs failed. Last errors:\n${errors.join("\n")}`)
 }
 
 export function useMindMap(isActive: boolean): UseMindMapResult {
@@ -105,22 +119,27 @@ export function useMindMap(isActive: boolean): UseMindMapResult {
         setError("")
         setAsrStep("getting_url")
         try {
-            const audioUrl = await service.getAudioUrl(videoId)
-            if (!audioUrl) throw new Error("This video does not support digital extraction.")
+            const urls: string[] = typeof (service as any).getAudioUrlCandidates === "function"
+                ? await (service as any).getAudioUrlCandidates(videoId)
+                : await (async () => {
+                    const u = await service.getAudioUrl(videoId)
+                    return u ? [u] : []
+                })()
+            if (urls.length === 0) throw new Error("This video does not support digital extraction.")
+
             setAsrStep("downloading")
-            const response: any = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({ type: "FETCH_AUDIO", url: audioUrl }, resolve)
-            })
-            if (!response?.success) throw new Error(response?.error || "Failed to download audio.")
-            const binaryString = atob(response.data)
-            const bytes = new Uint8Array(binaryString.length)
-            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
-            const audioBlob = new Blob([bytes], { type: "audio/mp4" })
+            const audioBlob = await downloadFirstSuccess(urls)
+
             setAsrStep("transcribing")
-            const transcript = await (await ASRServiceFactory.getService()).transcribe(audioBlob)
-            if (!transcript) throw new Error("Transcription result is empty.")
+            const result = await transcribeLongAudio(audioBlob)
+            if (!result.text) throw new Error("Transcription result is empty.")
+
+            const asrSubs: SubtitleSegment[] = result.segments.length > 0
+                ? result.segments
+                : [{ start: 0, end: 0, text: result.text }]
+
             setAsrStep("generating")
-            await generateMindMap([{ start: 0, end: 0, text: transcript }])
+            await generateMindMap(asrSubs)
         } catch (e) {
             setError((e as Error).message)
         } finally {

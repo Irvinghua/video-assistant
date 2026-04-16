@@ -11,20 +11,31 @@ function parseTimestamp(ts: string): number {
     return 0
 }
 
+const SEGMENT_VARIANTS: { el: string; time: string; text: string[] }[] = [
+    { el: "ytd-transcript-segment-renderer", time: ".segment-timestamp", text: [".segment-text"] },
+    { el: "transcript-segment-view-model", time: ".ytwTranscriptSegmentViewModelTimestamp", text: [".ytAttributedStringHost", "span[role='text']", ".yt-core-attributed-string"] }
+]
+
 function readSegmentsFromDOM(): SubtitleSegment[] {
-    const segEls = document.querySelectorAll("transcript-segment-view-model")
-    const segments: SubtitleSegment[] = []
-    segEls.forEach((seg, i) => {
-        const timeEl = seg.querySelector(".ytwTranscriptSegmentViewModelTimestamp")
-        const textEl = seg.querySelector(".yt-core-attributed-string")
-        const time = timeEl?.textContent?.trim() || ""
-        const text = textEl?.textContent?.trim() || ""
-        if (text && time && !/^\{/.test(text)) { // skip speaker labels like {***TONY*}
-            const start = parseTimestamp(time)
-            segments.push({ start, end: start, text })
-        }
-    })
-    return segments
+    for (const v of SEGMENT_VARIANTS) {
+        const segEls = document.querySelectorAll(v.el)
+        if (segEls.length === 0) continue
+        const segments: SubtitleSegment[] = []
+        segEls.forEach(seg => {
+            const time = seg.querySelector(v.time)?.textContent?.trim() || ""
+            let text = ""
+            for (const sel of v.text) {
+                text = seg.querySelector(sel)?.textContent?.trim().replace(/\s+/g, " ") || ""
+                if (text) break
+            }
+            if (text && time && !/^\{/.test(text)) {
+                const start = parseTimestamp(time)
+                segments.push({ start, end: start, text })
+            }
+        })
+        if (segments.length > 0) return segments
+    }
+    return []
 }
 
 async function scrollAndCollectAll(scrollEl: Element): Promise<SubtitleSegment[]> {
@@ -59,23 +70,38 @@ async function scrollAndCollectAll(scrollEl: Element): Promise<SubtitleSegment[]
     return allSegments.sort((a, b) => a.start - b.start)
 }
 
+function findTranscriptButton(): HTMLButtonElement | null {
+    const section = document.querySelector("ytd-video-description-transcript-section-renderer")
+    return (section?.querySelector("button") as HTMLButtonElement | null) ?? null
+}
+
+async function expandDescription(watchMeta: Element): Promise<void> {
+    const expandBtn = watchMeta.querySelector("tp-yt-paper-button#expand, #expand") as HTMLElement | null
+    if (expandBtn) {
+        expandBtn.click()
+        await new Promise(r => setTimeout(r, 400))
+    }
+}
+
 export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegment[]> {
     dbg(`START for ${videoId}`)
 
     try {
-        // Find the "内容转文字" (transcript) button in the video actions bar
         const watchMeta = document.querySelector("ytd-watch-metadata")
         if (!watchMeta) {
             dbg("No ytd-watch-metadata found")
             return []
         }
 
-        const transcriptBtn = Array.from(watchMeta.querySelectorAll("button[aria-label]")).find(
-            b => (b as HTMLButtonElement).getAttribute("aria-label") === "内容转文字"
-        ) as HTMLButtonElement | undefined
+        let transcriptBtn = findTranscriptButton()
+        if (!transcriptBtn) {
+            dbg("Transcript section not in DOM; expanding description...")
+            await expandDescription(watchMeta)
+            transcriptBtn = findTranscriptButton()
+        }
 
         if (!transcriptBtn) {
-            dbg("Transcript button not found (video may have no subtitles, or UI label differs)")
+            dbg("Transcript section still absent (video has no subtitles)")
             return []
         }
 
@@ -114,9 +140,9 @@ export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegm
 
         dbg(`Total segments collected: ${allSegments.length}`)
 
-        // Close the transcript panel
+        // Close the transcript panel using structural DOM selector (language-agnostic)
         const closeBtn = panel?.querySelector(
-            "button[aria-label='关闭'], button[aria-label='Close'], button[aria-label='关闭转写文稿'], button[aria-label='Close transcript']"
+            "#header #navigation-button button, ytd-engagement-panel-title-header-renderer #navigation-button button"
         ) as HTMLButtonElement | null
         if (closeBtn) {
             closeBtn.click()

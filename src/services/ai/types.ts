@@ -13,22 +13,22 @@ export interface SummaryResult {
     fullDigest: string
 }
 
+export type ConsensusHeat = "extreme" | "high" | "medium"
+
 export interface CommentAnalysis {
-    clusters: {
-        label: string
-        ratio: number
-        examples: string[]
-    }[]
-    sentiment: {
-        positive: number
-        negative: number
-        neutral: number
-    }
-    controversies: {
+    consensus: { point: string; heat: ConsensusHeat }[]
+    divergences: {
         topic: string
-        agreed: string
-        disagreed: string
+        sideA: string
+        sideB: string
+        rootCause: string
     }[]
+    gap: {
+        hit: string
+        miss: string
+    }
+    mood: string[]
+    spotlight: string[]
 }
 
 export interface SummarizeOptions {
@@ -45,7 +45,7 @@ export interface IAIService {
     /**
      * Analyze comments for clustering and sentiment
      */
-    analyzeComments(comments: string[], opts?: any): Promise<CommentAnalysis>
+    analyzeComments(videoOverview: string, samplesJson: string): Promise<CommentAnalysis>
 
     /**
      * Chat with context

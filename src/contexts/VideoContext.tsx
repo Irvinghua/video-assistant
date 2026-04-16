@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
-import type { IPlatformService, VideoInfo, SubtitleSegment, Comment } from "../services/platform/types"
+import type { IPlatformService, VideoInfo, SubtitleSegment, SampledComments } from "../services/platform/types"
 import type { SummaryResult } from "../services/ai/types"
 
 interface VideoContextValue {
@@ -7,7 +7,7 @@ interface VideoContextValue {
     platform: string
     videoInfo: VideoInfo | null
     subtitles: SubtitleSegment[]
-    comments: Comment[]
+    sampledComments: SampledComments | null
     dataLoading: boolean
     summaryResult: SummaryResult | null
     setSubtitles: (subs: SubtitleSegment[]) => void
@@ -32,23 +32,25 @@ interface VideoProviderProps {
 export function VideoProvider({ service, isOpen, children }: VideoProviderProps) {
     const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null)
     const [subtitles, setSubtitles] = useState<SubtitleSegment[]>([])
-    const [comments, setComments] = useState<Comment[]>([])
+    const [sampledComments, setSampledComments] = useState<SampledComments | null>(null)
     const [dataLoading, setDataLoading] = useState(true)
     const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
 
     const platform = service.getPlatformName()
 
+    const emptySampled: SampledComments = { consensus: [], controversial: [] }
+
     const loadData = useCallback(async (videoId: string) => {
         setDataLoading(true)
         try {
-            const [subs, comms] = await Promise.all([
+            const [subs, sampled] = await Promise.all([
                 service.getSubtitles(videoId).catch(e => { console.error("[VideoContext] Subtitle error:", e); return [] as SubtitleSegment[] }),
-                service.getComments(videoId, 100).catch(e => { console.error("[VideoContext] Comment error:", e); return [] as Comment[] })
+                service.getComments(videoId).catch(e => { console.error("[VideoContext] Comment error:", e); return emptySampled })
             ])
             if (service.detectVideo()?.id === videoId) {
                 setSubtitles(subs)
-                setComments(comms)
-                console.log(`[VideoContext] Data loaded for ${videoId}. Subs: ${subs.length}`)
+                setSampledComments(sampled)
+                console.log(`[VideoContext] Data loaded for ${videoId}. Subs: ${subs.length}, Comments consensus=${sampled.consensus.length}, controversial=${sampled.controversial.length}`)
             }
         } catch (e) {
             console.error("[VideoContext] Failed to load video data", e)
@@ -69,7 +71,7 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
             setVideoInfo(info)
             if (info.id !== videoInfo?.id) {
                 setSubtitles([])
-                setComments([])
+                setSampledComments(null)
                 setSummaryResult(null)
             }
             loadData(info.id)
@@ -84,7 +86,7 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
             platform,
             videoInfo,
             subtitles,
-            comments,
+            sampledComments,
             dataLoading,
             summaryResult,
             setSubtitles,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import type { PlasmoCSConfig, PlasmoGetOverlayAnchor, PlasmoGetShadowHostId } from "plasmo"
+import type { PlasmoCSConfig, PlasmoGetShadowHostId } from "plasmo"
 import cssText from "data-text:~style.css"
 
 import { YouTubeService } from "../services/platform/youtube/YouTubeService"
@@ -18,7 +18,6 @@ export const getStyle = () => {
 }
 
 export const getShadowHostId: PlasmoGetShadowHostId = () => "video-assistant-youtube"
-export const getOverlayAnchor: PlasmoGetOverlayAnchor = async () => document.body
 
 export const getShadowHostStyle = () => {
     const style = document.createElement("style")
