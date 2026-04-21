@@ -5,6 +5,7 @@ import cssText from "data-text:~style.css"
 import { BilibiliService } from "../services/platform/bilibili/BilibiliService"
 import { Sidebar } from "../components/Sidebar"
 import { ToggleButton } from "../components/ToggleButton"
+import { I18nProvider } from "../i18n/I18nProvider"
 
 export const config: PlasmoCSConfig = {
     matches: ["https://www.bilibili.com/video/*"],
@@ -66,10 +67,12 @@ const BilibiliCS = () => {
     }, [])
 
     return (
-        <div className={isDark ? "dark" : ""} style={{ pointerEvents: "auto" }}>
-            <ToggleButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
-            <Sidebar service={service} isOpen={isOpen} onClose={() => setIsOpen(false)} />
-        </div>
+        <I18nProvider>
+            <div className={isDark ? "dark" : ""} style={{ pointerEvents: "auto" }}>
+                <ToggleButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
+                <Sidebar service={service} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+            </div>
+        </I18nProvider>
     )
 }
 

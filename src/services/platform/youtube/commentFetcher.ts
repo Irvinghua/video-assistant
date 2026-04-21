@@ -42,28 +42,40 @@ function runsToText(node: any): string {
 }
 
 async function fetchWatchConfig(videoId: string): Promise<WatchConfig> {
-    const res = await fetch(`/watch?v=${videoId}`, { credentials: "include" })
-    const html = await res.text()
+    // Retry up to 3 times — YouTube's SPA may serve a thin HTML shell on the
+    // first fetch that doesn't contain ytInitialData or comment continuations.
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await fetch(`/watch?v=${videoId}`, { credentials: "include" })
+        const html = await res.text()
 
-    const apiKey = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/)?.[1] || FALLBACK_API_KEY
-    const clientVersion = html.match(/"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"/)?.[1]
-        || html.match(/"clientVersion":"(2\.\d+\.\d+\.\d+)"/)?.[1]
-        || FALLBACK_CLIENT_VERSION
+        const apiKey = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/)?.[1] || FALLBACK_API_KEY
+        const clientVersion = html.match(/"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"/)?.[1]
+            || html.match(/"clientVersion":"(2\.\d+\.\d+\.\d+)"/)?.[1]
+            || FALLBACK_CLIENT_VERSION
 
-    const context = {
-        client: { clientName: "WEB", clientVersion, hl: "en", gl: "US" }
-    }
-
-    let initialContinuation: string | null = null
-    const dataMatch = html.match(/var ytInitialData\s*=\s*(\{[\s\S]*?\});\s*<\/script>/)
-    if (dataMatch) {
-        try {
-            initialContinuation = findCommentsContinuation(JSON.parse(dataMatch[1]))
-        } catch (e) {
-            console.warn("[YouTubeComments] ytInitialData parse failed:", (e as Error).message)
+        const context = {
+            client: { clientName: "WEB", clientVersion, hl: "en", gl: "US" }
         }
+
+        let initialContinuation: string | null = null
+        const dataMatch = html.match(/var ytInitialData\s*=\s*(\{[\s\S]*?\});\s*<\/script>/)
+        if (dataMatch) {
+            try {
+                initialContinuation = findCommentsContinuation(JSON.parse(dataMatch[1]))
+            } catch (e) {
+                console.warn("[YouTubeComments] ytInitialData parse failed:", (e as Error).message)
+            }
+        }
+
+        if (initialContinuation) {
+            return { apiKey, context, initialContinuation }
+        }
+
+        console.warn(`[YouTubeComments] No comment continuation in attempt ${attempt + 1}, html length=${html.length}`)
+        if (attempt < 2) await new Promise(r => setTimeout(r, 2000))
     }
-    return { apiKey, context, initialContinuation }
+
+    return { apiKey: FALLBACK_API_KEY, context: { client: { clientName: "WEB", clientVersion: FALLBACK_CLIENT_VERSION, hl: "en", gl: "US" } }, initialContinuation: null }
 }
 
 function findCommentsContinuation(data: any): string | null {
@@ -232,6 +244,9 @@ async function fetchTopReplies(replyContinuation: string, apiKey: string, contex
 }
 
 export async function getYouTubeComments(videoId: string): Promise<SampledComments> {
+    // Wait for ytInitialData to be present (page fully loaded)
+    await waitForPageData()
+
     try {
         const { comments: l1, replyContinuations, apiKey, context } = await fetchTopThreads(videoId, HOT_POOL_SIZE)
         if (l1.length === 0) return { consensus: [], controversial: [] }
@@ -256,4 +271,25 @@ export async function getYouTubeComments(videoId: string): Promise<SampledCommen
         console.error("[YouTubeComments] Fatal error:", error)
         return { consensus: [], controversial: [] }
     }
+}
+
+/** Wait up to 15 s for the YouTube page to be fully rendered. */
+function waitForPageData(): Promise<void> {
+    return new Promise((resolve) => {
+        // When the comments section element exists, ytInitialData is guaranteed to be in the HTML
+        if (document.querySelector("ytd-comments#comments") || document.querySelector("ytd-item-section-renderer#sections")) {
+            return resolve()
+        }
+        const t0 = Date.now()
+        const timer = setInterval(() => {
+            if (
+                document.querySelector("ytd-comments#comments") ||
+                document.querySelector("ytd-item-section-renderer#sections") ||
+                Date.now() - t0 > 15000
+            ) {
+                clearInterval(timer)
+                resolve()
+            }
+        }, 500)
+    })
 }

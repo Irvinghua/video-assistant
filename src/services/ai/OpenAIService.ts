@@ -4,9 +4,9 @@ import type { ChatMessage } from "./types"
 export class OpenAIService extends BaseAIService {
     private baseUrl: string
 
-    constructor(apiKey: string, modelName: string = "gpt-3.5-turbo", baseUrl: string = "https://api.openai.com/v1") {
+    constructor(apiKey: string, modelName: string = "gpt-4o-mini", baseUrl: string = "https://api.openai.com/v1") {
         super(apiKey, modelName)
-        this.baseUrl = baseUrl
+        this.baseUrl = baseUrl.replace(/\/+$/, "")
     }
 
     async chat(messages: ChatMessage[], context?: string): Promise<string> {
@@ -22,7 +22,7 @@ export class OpenAIService extends BaseAIService {
                 "Authorization": `Bearer ${this.apiKey}`
             },
             body: JSON.stringify({
-                model: this.modelName === "ChatGPT" ? "gpt-3.5-turbo" : this.modelName, // simple mapping
+                model: this.modelName,
                 messages: msgs
             })
         })

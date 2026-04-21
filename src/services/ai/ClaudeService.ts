@@ -2,14 +2,16 @@ import { BaseAIService } from "./BaseAIService"
 import type { ChatMessage } from "./types"
 
 export class ClaudeService extends BaseAIService {
-    constructor(apiKey: string) {
-        super(apiKey, "Claude")
+    private baseUrl: string
+
+    constructor(apiKey: string, modelName: string = "claude-opus-4-7", baseUrl: string = "https://api.anthropic.com/v1") {
+        super(apiKey, modelName)
+        this.baseUrl = baseUrl.replace(/\/+$/, "")
     }
 
     async chat(messages: ChatMessage[], context?: string): Promise<string> {
-        const url = "https://api.anthropic.com/v1/messages"
+        const url = `${this.baseUrl}/messages`
 
-        // Claude messages format: system prompt is separate
         let systemPrompt = ""
         if (context) {
             systemPrompt = `Context: ${context}`
@@ -26,10 +28,10 @@ export class ClaudeService extends BaseAIService {
                 "x-api-key": this.apiKey,
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json",
-                "anthropic-dangerous-direct-browser-access": "true" // Required for browser calls
+                "anthropic-dangerous-direct-browser-access": "true"
             },
             body: JSON.stringify({
-                model: "claude-3-opus-20240229",
+                model: this.modelName,
                 max_tokens: 1024,
                 system: systemPrompt,
                 messages: anthropicMessages

@@ -6,13 +6,13 @@ import { ExportService } from "../services/export/ExportService"
 import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { useVideo } from "../contexts/VideoContext"
+import { useI18n } from "../i18n/I18nProvider"
 
 export type ASRStep = "idle" | "getting_url" | "downloading" | "transcribing" | "summarizing"
 
 export interface UseSummaryResult {
     summary: SummaryResult | null
     loading: boolean
-    checkingCache: boolean
     error: string
     asrStep: ASRStep
     handleSummarize: (subs: SubtitleSegment[]) => Promise<void>
@@ -54,53 +54,35 @@ async function resolveAudioUrls(service: any, videoId: string): Promise<string[]
 }
 
 export function useSummary(): UseSummaryResult {
-    const { videoInfo, platform, service, setSubtitles, setSummaryResult } = useVideo()
+    const { videoInfo, platform, service, setSubtitles, setSummaryResult, cachedData } = useVideo()
+    const { t, aiLanguage } = useI18n()
     const videoId = videoInfo?.id
 
     const [summary, setSummary] = useState<SummaryResult | null>(null)
     const [loading, setLoading] = useState(false)
-    const [checkingCache, setCheckingCache] = useState(false)
     const [error, setError] = useState("")
     const [asrStep, setAsrStep] = useState<ASRStep>("idle")
     const currentVideoIdRef = useRef(videoId)
 
+    // Hydrate from batch-loaded cache
     useEffect(() => {
         currentVideoIdRef.current = videoId
-        setSummary(null)
         setError("")
         setAsrStep("idle")
-        if (videoId) checkCache(videoId)
-    }, [videoId])
-
-    useEffect(() => {
-        const handleMessage = (message: any) => {
-            if (message.type === "CACHE_CLEARED") setSummary(null)
+        if (cachedData.summary) {
+            setSummary(cachedData.summary)
+            setSummaryResult(cachedData.summary)
+        } else {
+            setSummary(null)
         }
-        chrome.runtime.onMessage.addListener(handleMessage)
-        return () => chrome.runtime.onMessage.removeListener(handleMessage)
-    }, [])
-
-    const checkCache = async (vId: string) => {
-        setCheckingCache(true)
-        try {
-            const cached = await cacheService.get<SummaryResult>(cacheKeys.summary(platform, vId))
-            if (currentVideoIdRef.current === vId && cached) {
-                setSummary(cached)
-                setSummaryResult(cached)
-            }
-        } catch (e) {
-            console.error("[useSummary] Cache error", e)
-        } finally {
-            setCheckingCache(false)
-        }
-    }
+    }, [videoId, cachedData.summary])
 
     const handleSummarize = async (targetSubs: SubtitleSegment[]) => {
-        if (!targetSubs.length) { setError("No content available to summarize."); return }
+        if (!targetSubs.length) { setError(t("summary.errors.noContent")); return }
         setLoading(true)
         setError("")
         try {
-            const result = await new VideoSummarizer().summarize(targetSubs)
+            const result = await new VideoSummarizer().summarize(targetSubs, aiLanguage)
             if (currentVideoIdRef.current === videoId) {
                 setSummary(result)
                 setSummaryResult(result)
@@ -119,7 +101,7 @@ export function useSummary(): UseSummaryResult {
         setAsrStep("getting_url")
         try {
             const urls = await resolveAudioUrls(service, videoId)
-            if (urls.length === 0) throw new Error("This video does not support audio extraction.")
+            if (urls.length === 0) throw new Error(t("summary.errors.noAudio"))
 
             setAsrStep("downloading")
             const audioBlob = await downloadAudio(urls)
@@ -131,12 +113,20 @@ export function useSummary(): UseSummaryResult {
                     console.log(`[useSummary] Transcribing chunk ${p.current}/${p.total}`)
                 }
             })
-            if (!result.text) throw new Error("Transcription result is empty.")
+            if (!result.text) throw new Error(t("summary.errors.transcriptionEmpty"))
 
             const asrSubs: SubtitleSegment[] = result.segments.length > 0
                 ? result.segments
                 : [{ start: 0, end: 0, text: result.text }]
             setSubtitles(asrSubs)
+
+            // Cache ASR subtitles
+            const subKey = cacheKeys.subtitle(platform, videoId)
+            const existing = await cacheService.get<SubtitleSegment[]>(subKey)
+            if (!existing) {
+                await cacheService.set(subKey, asrSubs)
+                console.log(`[useSummary] Cached ASR subtitles for ${videoId}`)
+            }
 
             setAsrStep("summarizing")
             await handleSummarize(asrSubs)
@@ -159,12 +149,12 @@ export function useSummary(): UseSummaryResult {
             await cacheService.remove(cacheKeys.summary(platform, videoId))
             setSummary(null)
             setSummaryResult(null)
-            setError("Cache cleared.")
+            setError(t("summary.cacheClearedToast"))
             setTimeout(() => setError(""), 3000)
         } catch (e) {
             console.error("[useSummary] Failed to clear cache", e)
         }
     }
 
-    return { summary, loading, checkingCache, error, asrStep, handleSummarize, handleDigitalASR, handleExport, handleClearCache }
+    return { summary, loading, error, asrStep, handleSummarize, handleDigitalASR, handleExport, handleClearCache }
 }

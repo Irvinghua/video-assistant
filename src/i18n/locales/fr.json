@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "close": "Fermer"
+  },
+  "popup": {
+    "title": "Assistant Vidéo IA",
+    "description": "Ouvrez une vidéo Bilibili ou YouTube pour utiliser l'assistant.",
+    "openSettings": "Ouvrir les paramètres"
+  },
+  "toggleButton": {
+    "open": "Ouvrir l'Assistant Vidéo IA"
+  },
+  "sidebar": {
+    "defaultTitle": "Assistant Vidéo",
+    "tabs": {
+      "summary": "Résumé",
+      "comments": "Commentaires",
+      "askAI": "Demander à l'IA",
+      "mindmap": "Carte mentale"
+    },
+    "languageSwitcher": {
+      "tooltip": "Changer la langue de l'interface"
+    }
+  },
+  "summary": {
+    "analyzing": "L'IA analyse...",
+    "asrNote": "Extraction de l'audio numérique. Veuillez patienter.",
+    "title": "Résumé",
+    "videoIdCached": "ID vidéo : {{id}} | En cache",
+    "clearCache": "Vider le cache",
+    "clearCacheTooltip": "Vider le cache de cette vidéo",
+    "cacheClearedToast": "Cache vidé.",
+    "export": "Exporter",
+    "sections": {
+      "digest": "Synthèse",
+      "keyPoints": "Points clés"
+    },
+    "detecting": "Détection du contenu vidéo...",
+    "detectingDesc": "Récupération des sous-titres",
+    "noSubtitles": "Aucun sous-titre trouvé",
+    "noSubtitlesDesc": "Extraire l'audio numérique et utiliser l'IA ?",
+    "summarizeViaAsr": "Résumer via ASR",
+    "subtitlesAvailable": "Sous-titres disponibles",
+    "subtitlesAvailableDesc": "Nous avons trouvé {{count}} lignes pour {{id}}.",
+    "generateNow": "Générer le résumé maintenant",
+    "subtitlePreview": "APERÇU DES SOUS-TITRES",
+    "andMoreLines": "... et {{count}} lignes de plus",
+    "errors": {
+      "noContent": "Aucun contenu à résumer.",
+      "noAudio": "Cette vidéo ne prend pas en charge l'extraction audio.",
+      "transcriptionEmpty": "Le résultat de la transcription est vide."
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "OBTENTION DE L'URL",
+      "downloading": "TÉLÉCHARGEMENT",
+      "transcribing": "TRANSCRIPTION",
+      "summarizing": "RÉSUMÉ",
+      "generating": "GÉNÉRATION"
+    }
+  },
+  "comments": {
+    "fetching": "Récupération des commentaires...",
+    "sampledStats": "{{total}} commentaires échantillonnés (Consensus {{consensus}} + Controverse {{controversial}}).",
+    "analysisHint": "L'analyse combine le résumé vidéo avec consensus / divergence / écart / ambiance.",
+    "analyzeBtn": "Analyser les commentaires",
+    "analyzing": "Analyse des commentaires...",
+    "reportTitle": "📊 Rapport d'opinion publique",
+    "sections": {
+      "consensus": "🤝 Consensus principal",
+      "divergences": "⚡ Divergences majeures",
+      "gap": "🔍 Vidéo vs Commentaires (Écart)",
+      "spotlight": "💡 Avis remarquables"
+    },
+    "heatLabel": "Intensité : {{level}}",
+    "heat": {
+      "extreme": "Extrême",
+      "high": "Élevée",
+      "medium": "Moyenne"
+    },
+    "noConsensus": "Aucun consensus clair détecté.",
+    "noDivergence": "Aucune divergence notable détectée.",
+    "sideA": "Camp A :",
+    "sideB": "Camp B :",
+    "rootCause": "Cause :",
+    "hit": "DANS LE MILLE",
+    "miss": "ÉCART / DÉBORDEMENT",
+    "errors": {
+      "noComments": "Aucun commentaire à analyser.",
+      "needSubtitle": "Veuillez d'abord récupérer les sous-titres (Résumer ou Résumer via ASR) avant d'analyser les commentaires."
+    }
+  },
+  "askAI": {
+    "emptyTitle": "Posez n'importe quelle question sur la vidéo !",
+    "emptyDesc": "Le contexte inclut les sous-titres et le résumé.",
+    "inputPlaceholder": "Posez une question...",
+    "errorPrefix": "Erreur : "
+  },
+  "mindmap": {
+    "generating": "L'IA génère la carte mentale...",
+    "preparing": "Préparation de la carte mentale...",
+    "linesAvailable": "{{count}} lignes disponibles",
+    "errors": {
+      "noAudio": "Cette vidéo ne prend pas en charge l'extraction numérique."
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "Modèle de chat non configuré",
+      "button": "Configurer le modèle de chat",
+      "desc": "Cliquez sur le bouton ci-dessus pour ouvrir les paramètres et ajouter la clé API du modèle « Résumé & Chat ». L'extension en a besoin avant de pouvoir résumer, analyser les commentaires, répondre aux questions ou générer des cartes mentales."
+    },
+    "asr": {
+      "title": "Reconnaissance vocale non configurée",
+      "button": "Configurer le fournisseur ASR",
+      "desc": "Cette vidéo n'a pas de sous-titres. Cliquez sur le bouton ci-dessus pour ouvrir les paramètres et ajouter une clé API ASR. L'extension transcrira ensuite l'audio pour vous."
+    }
+  },
+  "options": {
+    "title": "Paramètres",
+    "savedToast": "Paramètres enregistrés !",
+    "sections": {
+      "language": "Langue",
+      "aiModel": "Modèle Résumé & Chat",
+      "aiModelDesc": "Utilisé pour les résumés vidéo, l'analyse des commentaires, Ask AI et la génération de cartes mentales. Choisissez un fournisseur et saisissez votre propre clé API.",
+      "asr": "ASR Distant",
+      "asrDesc": "Utilisé pour les vidéos sans sous-titres officiels. L'audio numérique est extrait et envoyé à cette API pour transcription.",
+      "cache": "Stockage & Cache",
+      "export": "Export de connaissances"
+    },
+    "labels": {
+      "uiLanguage": "Langue de l'interface",
+      "provider": "Fournisseur",
+      "apiKey": "Clé API {{provider}}",
+      "chatModel": "Modèle spécifique",
+      "asrModel": "Modèle spécifique",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "Clé API ASR",
+      "cacheDays": "Validité du cache (jours)",
+      "notionToken": "Token Notion",
+      "readwiseToken": "Token Readwise",
+      "obsidianVault": "Chemin du Vault Obsidian"
+    },
+    "placeholders": {
+      "chatApiKey": "Saisissez la clé API pour {{provider}}",
+      "chatEndpoint": "ex. https://api.openai.com/v1",
+      "asrApiKey": "Saisissez la clé API pour {{provider}}",
+      "asrEndpoint": "ex. https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/chemin/vers/vault"
+    },
+    "languageHint": "Affecte l'interface (sidebar, popup, paramètres) et la langue de réponse de l'IA.",
+    "clearAllCache": "Tout vider le cache",
+    "cacheCleared": "Vidé !",
+    "storageNote": "Toutes les clés sont stockées localement dans votre navigateur.",
+    "freeHint": {
+      "signup": "Page d'inscription :",
+      "keyPage": "Créer une clé API :",
+      "usage": "Une fois créée, sélectionnez le modèle correspondant dans la liste déroulante ci-dessus et collez la clé API dans le champ de saisie.",
+      "help": "Vous ne savez pas comment vous inscrire ou créer une clé API ? Demandez à n'importe quel chatbot IA de vous guider pas à pas.",
+      "chatIntro": "Si vous n'avez pas encore acheté de clé API pour un modèle IA, nous vous recommandons de vous inscrire sur Ollama. La plateforme permet d'obtenir une clé API gratuitement et offre aux utilisateurs gratuits un quota généreux, suffisant pour un usage modéré.",
+      "asrIntro": "Si vous n'avez pas encore acheté de clé API pour un modèle IA, nous vous recommandons de vous inscrire sur Groq. La plateforme permet d'obtenir une clé API gratuitement et offre aux utilisateurs gratuits un quota généreux, suffisant pour un usage modéré."
+    },
+    "ollama": {
+      "loading": "Récupération des modèles disponibles depuis Ollama Cloud...",
+      "fetchFailed": "Échec de la récupération de la liste des modèles Ollama : {{error}}. Affichage de la liste par défaut."
+    },
+    "saveBtn": "Enregistrer tous les paramètres"
+  }
+}

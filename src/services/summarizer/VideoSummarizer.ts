@@ -4,6 +4,49 @@ import { chunkText } from "../../utils/textChunker"
 import type { SummaryResult } from "../ai/types"
 import type { SubtitleSegment } from "../platform/types"
 
+/** Strip markdown code fences and extract the first valid JSON object from AI response. */
+function extractJSON(response: string): string | null {
+    // Strip markdown code fences: ```json ... ``` or ``` ... ```
+    let cleaned = response.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?\s*```\s*$/i, "").trim()
+
+    // Try to find balanced curly-brace JSON using a stack-based approach
+    const firstBrace = cleaned.indexOf("{")
+    if (firstBrace === -1) return null
+
+    let depth = 0
+    let inString = false
+    let escape = false
+    for (let i = firstBrace; i < cleaned.length; i++) {
+        const ch = cleaned[i]
+        if (escape) { escape = false; continue }
+        if (ch === "\\") { if (inString) escape = true; continue }
+        if (ch === '"') { inString = !inString; continue }
+        if (inString) continue
+        if (ch === "{") depth++
+        if (ch === "}") depth--
+        if (depth === 0) return cleaned.substring(firstBrace, i + 1)
+    }
+    // Unbalanced — fall back to greedy regex
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    return match ? match[0] : null
+}
+
+/** Try JSON.parse with fallback fixes for common AI output issues. */
+function parseJSONSafe(raw: string): any {
+    // Attempt 1: direct parse
+    try { return JSON.parse(raw) } catch { /* continue */ }
+
+    // Attempt 2: remove trailing commas before } or ]
+    const noTrailingCommas = raw.replace(/,\s*([}\]])/g, "$1")
+    try { return JSON.parse(noTrailingCommas) } catch { /* continue */ }
+
+    // Attempt 3: fix single-quoted strings (rare but happens)
+    const noSingleQuotes = noTrailingCommas.replace(/'([^']*)'/g, '"$1"')
+    try { return JSON.parse(noSingleQuotes) } catch { /* continue */ }
+
+    throw new Error("Unable to parse AI response as JSON")
+}
+
 export class VideoSummarizer {
     async summarize(subtitles: SubtitleSegment[], language: string = "Chinese"): Promise<SummaryResult> {
         const aiService = await AIServiceFactory.getService()
@@ -28,16 +71,19 @@ export class VideoSummarizer {
             { role: "user", content: Prompts.finalSummary(combinedSummary, language) }
         ])
 
-        const jsonMatch = response.match(/\{[\s\S]*\}/)
-        if (!jsonMatch) throw new Error("Failed to generate JSON summary. AI response was not valid JSON.")
+        const jsonStr = extractJSON(response)
+        if (!jsonStr) {
+            console.error("[VideoSummarizer] No JSON found in AI response:", response.slice(0, 500))
+            throw new Error("AI response did not contain valid JSON. Please try again.")
+        }
 
         try {
-            const parsed = JSON.parse(jsonMatch[0])
+            const parsed = parseJSONSafe(jsonStr)
             if (!parsed.chapters || !Array.isArray(parsed.chapters)) parsed.chapters = []
             return parsed
         } catch (e) {
-            console.error("[VideoSummarizer] JSON Parse Error:", e, response)
-            throw new Error("Failed to parse summary JSON")
+            console.error("[VideoSummarizer] JSON Parse Error:", e, "Raw response (first 500 chars):", response.slice(0, 500))
+            throw new Error("Failed to parse summary JSON. The AI response was malformed — please try again.")
         }
     }
 }

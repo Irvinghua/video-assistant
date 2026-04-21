@@ -24,13 +24,13 @@ function toL1(c: Comment, includeReplies: boolean): L1Payload {
 }
 
 export class CommentAnalyzer {
-    async analyze(sampled: SampledComments, videoOverview: string): Promise<CommentAnalysis> {
+    async analyze(sampled: SampledComments, videoScript: string, language?: string): Promise<CommentAnalysis> {
         const aiService = await AIServiceFactory.getService()
         const payload = {
             consensusPool: sampled.consensus.map(c => toL1(c, false)),
             controversialThreads: sampled.controversial.map(c => toL1(c, true))
         }
         const samplesJson = JSON.stringify(payload, null, 2)
-        return await aiService.analyzeComments(videoOverview, samplesJson)
+        return await aiService.analyzeComments(videoScript, samplesJson, language)
     }
 }

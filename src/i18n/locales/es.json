@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "close": "Cerrar"
+  },
+  "popup": {
+    "title": "Asistente de Video IA",
+    "description": "Abre un video de Bilibili o YouTube para usar el asistente.",
+    "openSettings": "Abrir Configuración"
+  },
+  "toggleButton": {
+    "open": "Abrir Asistente de Video IA"
+  },
+  "sidebar": {
+    "defaultTitle": "Asistente de Video",
+    "tabs": {
+      "summary": "Resumen",
+      "comments": "Comentarios",
+      "askAI": "Preguntar a IA",
+      "mindmap": "Mapa Mental"
+    },
+    "languageSwitcher": {
+      "tooltip": "Cambiar idioma de la interfaz"
+    }
+  },
+  "summary": {
+    "analyzing": "La IA está analizando...",
+    "asrNote": "Extrayendo audio digital. Por favor espera.",
+    "title": "Resumen",
+    "videoIdCached": "ID del video: {{id}} | En caché",
+    "clearCache": "Borrar caché",
+    "clearCacheTooltip": "Borrar caché de este video",
+    "cacheClearedToast": "Caché borrado.",
+    "export": "Exportar",
+    "sections": {
+      "digest": "Síntesis",
+      "keyPoints": "Puntos clave"
+    },
+    "detecting": "Detectando contenido del video...",
+    "detectingDesc": "Obteniendo información de subtítulos",
+    "noSubtitles": "No se encontraron subtítulos",
+    "noSubtitlesDesc": "¿Extraer audio digital y usar IA?",
+    "summarizeViaAsr": "Resumir vía ASR",
+    "subtitlesAvailable": "Subtítulos disponibles",
+    "subtitlesAvailableDesc": "Encontramos {{count}} líneas para {{id}}.",
+    "generateNow": "Generar resumen ahora",
+    "subtitlePreview": "VISTA PREVIA DE SUBTÍTULOS",
+    "andMoreLines": "... y {{count}} líneas más",
+    "errors": {
+      "noContent": "No hay contenido disponible para resumir.",
+      "noAudio": "Este video no admite extracción de audio.",
+      "transcriptionEmpty": "El resultado de la transcripción está vacío."
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "OBTENIENDO URL",
+      "downloading": "DESCARGANDO",
+      "transcribing": "TRANSCRIBIENDO",
+      "summarizing": "RESUMIENDO",
+      "generating": "GENERANDO"
+    }
+  },
+  "comments": {
+    "fetching": "Obteniendo comentarios...",
+    "sampledStats": "{{total}} comentarios muestreados (Consenso {{consensus}} + Controversia {{controversial}}).",
+    "analysisHint": "El análisis combina el resumen del video con consenso / divergencia / brecha / clima.",
+    "analyzeBtn": "Analizar comentarios",
+    "analyzing": "Analizando comentarios...",
+    "reportTitle": "📊 Informe de opinión pública",
+    "sections": {
+      "consensus": "🤝 Consenso central",
+      "divergences": "⚡ Divergencias principales",
+      "gap": "🔍 Video vs Comentarios (Brecha)",
+      "spotlight": "💡 Comentarios destacados"
+    },
+    "heatLabel": "Intensidad: {{level}}",
+    "heat": {
+      "extreme": "Extrema",
+      "high": "Alta",
+      "medium": "Media"
+    },
+    "noConsensus": "No se detectó consenso claro.",
+    "noDivergence": "No se detectó divergencia notable.",
+    "sideA": "Lado A:",
+    "sideB": "Lado B:",
+    "rootCause": "Causa raíz:",
+    "hit": "ACIERTO",
+    "miss": "DESVÍO / OMISIÓN",
+    "errors": {
+      "noComments": "No hay comentarios disponibles para analizar.",
+      "needSubtitle": "Por favor obtén primero los subtítulos del video (Resumen o Resumir vía ASR) antes de analizar comentarios."
+    }
+  },
+  "askAI": {
+    "emptyTitle": "¡Pregunta cualquier cosa sobre el video!",
+    "emptyDesc": "El contexto incluye subtítulos y resumen.",
+    "inputPlaceholder": "Haz una pregunta...",
+    "errorPrefix": "Error: "
+  },
+  "mindmap": {
+    "generating": "La IA está generando el mapa mental...",
+    "preparing": "Preparando mapa mental...",
+    "linesAvailable": "{{count}} líneas disponibles",
+    "errors": {
+      "noAudio": "Este video no admite extracción digital."
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "Modelo de chat sin configurar",
+      "button": "Configurar modelo de chat",
+      "desc": "Pulsa el botón de arriba para abrir Configuración y añadir la API Key del modelo de Resumen y Chat. La extensión la necesita antes de poder resumir, analizar comentarios, responder preguntas o crear mapas mentales."
+    },
+    "asr": {
+      "title": "Transcripción de voz sin configurar",
+      "button": "Configurar proveedor ASR",
+      "desc": "Este vídeo no tiene subtítulos. Pulsa el botón de arriba para abrir Configuración y añadir una API Key de ASR. Después la extensión transcribirá el audio por ti."
+    }
+  },
+  "options": {
+    "title": "Configuración",
+    "savedToast": "¡Configuración guardada!",
+    "sections": {
+      "language": "Idioma",
+      "aiModel": "Modelo de Resumen y Chat",
+      "aiModelDesc": "Se usa para resúmenes de video, análisis de comentarios, Ask AI y generación de mapas mentales. Elige un proveedor e introduce tu propia API Key.",
+      "asr": "ASR Remoto",
+      "asrDesc": "Se usa para videos sin subtítulos oficiales. Se extrae el audio digital y se envía a esta API para transcripción.",
+      "cache": "Almacenamiento y caché",
+      "export": "Exportación de conocimiento"
+    },
+    "labels": {
+      "uiLanguage": "Idioma de la interfaz",
+      "provider": "Proveedor",
+      "apiKey": "API Key de {{provider}}",
+      "chatModel": "Modelo específico",
+      "asrModel": "Modelo específico",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "API Key de ASR",
+      "cacheDays": "Validez del caché (días)",
+      "notionToken": "Token de Notion",
+      "readwiseToken": "Token de Readwise",
+      "obsidianVault": "Ruta del Vault de Obsidian"
+    },
+    "placeholders": {
+      "chatApiKey": "Introduce la API Key de {{provider}}",
+      "chatEndpoint": "ej. https://api.openai.com/v1",
+      "asrApiKey": "Introduce la API Key de {{provider}}",
+      "asrEndpoint": "ej. https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/ruta/al/vault"
+    },
+    "languageHint": "Afecta la interfaz de la barra lateral / popup / configuración, y el idioma en que responde la IA.",
+    "clearAllCache": "Borrar todo el caché",
+    "cacheCleared": "¡Borrado!",
+    "storageNote": "Todas las claves se guardan localmente en tu navegador.",
+    "freeHint": {
+      "signup": "Página de registro:",
+      "keyPage": "Crear API Key:",
+      "usage": "Una vez creada, selecciona el modelo correspondiente en el menú desplegable de arriba y pega la API Key en el campo de entrada.",
+      "help": "¿No sabes cómo registrarte o crear la API Key? Pregunta a cualquier chatbot de IA para que te guíe paso a paso.",
+      "chatIntro": "Si aún no has comprado ninguna API Key de modelo de IA, te recomendamos registrarte en Ollama. La plataforma permite registrar una API Key gratis y ofrece a los usuarios gratuitos una cuota generosa, suficiente para un uso moderado.",
+      "asrIntro": "Si aún no has comprado ninguna API Key de modelo de IA, te recomendamos registrarte en Groq. La plataforma permite registrar una API Key gratis y ofrece a los usuarios gratuitos una cuota generosa, suficiente para un uso moderado."
+    },
+    "ollama": {
+      "loading": "Obteniendo modelos disponibles desde Ollama Cloud...",
+      "fetchFailed": "No se pudo obtener la lista de modelos de Ollama: {{error}}. Se muestra la lista predeterminada."
+    },
+    "saveBtn": "Guardar toda la configuración"
+  }
+}

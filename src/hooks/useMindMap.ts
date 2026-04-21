@@ -2,17 +2,18 @@ import { useState, useEffect, useRef } from "react"
 import { AIServiceFactory } from "../services/ai/AIServiceFactory"
 import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
+import { getPlainScript } from "../services/cache/SubtitleScript"
 import { Prompts } from "../services/ai/prompts"
 import { chunkText } from "../utils/textChunker"
 import type { SubtitleSegment } from "../services/platform/types"
 import { useVideo } from "../contexts/VideoContext"
+import { useI18n } from "../i18n/I18nProvider"
 
 export type MindMapASRStep = "idle" | "getting_url" | "downloading" | "transcribing" | "generating"
 
 export interface UseMindMapResult {
     markdown: string | null
     loading: boolean
-    checkingCache: boolean
     error: string
     asrStep: MindMapASRStep
     checkCacheAndGenerate: () => Promise<void>
@@ -34,53 +35,54 @@ async function downloadFirstSuccess(urls: string[]): Promise<Blob> {
 }
 
 export function useMindMap(isActive: boolean): UseMindMapResult {
-    const { videoInfo, platform, subtitles, service } = useVideo()
+    const { videoInfo, platform, subtitles, service, cachedData } = useVideo()
+    const { t, aiLanguage } = useI18n()
     const videoId = videoInfo?.id
 
     const [markdown, setMarkdown] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
-    const [checkingCache, setCheckingCache] = useState(false)
     const [error, setError] = useState("")
     const [asrStep, setAsrStep] = useState<MindMapASRStep>("idle")
     const currentVideoIdRef = useRef(videoId)
+    const busyRef = useRef(false)
 
-    // Reset on video change
+    // Hydrate from batch-loaded cache or reset on video change
     useEffect(() => {
         currentVideoIdRef.current = videoId
-        setMarkdown(null)
         setError("")
         setAsrStep("idle")
-    }, [videoId])
+        busyRef.current = false
+        if (cachedData.mindmap) {
+            setMarkdown(cachedData.mindmap)
+        } else {
+            setMarkdown(null)
+        }
+    }, [videoId, cachedData.mindmap])
 
-    // Auto-generate when tab becomes active or subtitles arrive
+    // Auto-generate when tab becomes active and subtitles are available
     useEffect(() => {
         if (!isActive || !videoId) return
-        if (markdown || loading || checkingCache) return
-        checkCacheAndGenerate()
-    }, [isActive, videoId, markdown, loading, checkingCache, subtitles.length])
+        if (markdown || busyRef.current) return
+        generateIfReady()
+    }, [isActive, videoId, subtitles.length])
 
-    const generateMindMap = async (subs: SubtitleSegment[]) => {
-        if (!videoId || subs.length === 0) return
+    const generateFromScript = async (script: string) => {
+        if (!videoId) return
         setLoading(true)
         setError("")
         try {
             const aiService = await AIServiceFactory.getService()
-            const textWithTime = subs.map(s => {
-                const m = Math.floor(s.start / 60)
-                const sec = Math.floor(s.start % 60)
-                return `[${m}:${sec.toString().padStart(2, '0')}] ${s.text}`
-            }).join("\n")
 
-            const chunks = chunkText(textWithTime, 3000)
-            let combinedText = textWithTime
+            const chunks = chunkText(script, 3000)
+            let combinedText = script
             if (chunks.length > 1) {
                 const summaries = await Promise.all(
-                    chunks.map(chunk => aiService.chat([{ role: "user", content: Prompts.mindmapChunkSummary(chunk) }]))
+                    chunks.map(chunk => aiService.chat([{ role: "user", content: Prompts.mindmapChunkSummary(chunk, aiLanguage) }]))
                 )
                 combinedText = summaries.join("\n\n")
             }
 
-            const result = await aiService.chat([{ role: "user", content: Prompts.mindmap(combinedText) }])
+            const result = await aiService.chat([{ role: "user", content: Prompts.mindmap(combinedText, aiLanguage) }])
             if (currentVideoIdRef.current !== videoId) return
 
             const cleaned = result.replace(/^```(?:markdown)?\n?/m, "").replace(/\n?```$/m, "").trim()
@@ -95,23 +97,27 @@ export function useMindMap(isActive: boolean): UseMindMapResult {
         }
     }
 
-    const checkCacheAndGenerate = async () => {
-        if (!videoId) return
-        setCheckingCache(true)
+    const generateIfReady = async () => {
+        if (!videoId || busyRef.current) return
+        busyRef.current = true
         try {
-            const cached = await cacheService.get<string>(cacheKeys.mindmap(platform, videoId))
+            const script = await getPlainScript(platform, videoId)
             if (currentVideoIdRef.current !== videoId) return
-            if (cached) {
-                console.log(`[useMindMap] Cache hit for ${videoId}`)
-                setMarkdown(cached)
-                return
+            if (script) {
+                await generateFromScript(script)
             }
-            if (subtitles.length > 0) await generateMindMap(subtitles)
         } catch (e) {
-            console.error("[useMindMap] Cache check error:", e)
+            console.error("[useMindMap] Generate error:", e)
         } finally {
-            setCheckingCache(false)
+            busyRef.current = false
         }
+    }
+
+    const checkCacheAndGenerate = async () => {
+        if (!videoId || busyRef.current) return
+        // If already have markdown from batch cache, skip
+        if (markdown) return
+        await generateIfReady()
     }
 
     const handleDigitalASR = async () => {
@@ -125,21 +131,30 @@ export function useMindMap(isActive: boolean): UseMindMapResult {
                     const u = await service.getAudioUrl(videoId)
                     return u ? [u] : []
                 })()
-            if (urls.length === 0) throw new Error("This video does not support digital extraction.")
+            if (urls.length === 0) throw new Error(t("mindmap.errors.noAudio"))
 
             setAsrStep("downloading")
             const audioBlob = await downloadFirstSuccess(urls)
 
             setAsrStep("transcribing")
             const result = await transcribeLongAudio(audioBlob)
-            if (!result.text) throw new Error("Transcription result is empty.")
+            if (!result.text) throw new Error(t("summary.errors.transcriptionEmpty"))
 
             const asrSubs: SubtitleSegment[] = result.segments.length > 0
                 ? result.segments
                 : [{ start: 0, end: 0, text: result.text }]
 
+            // Cache ASR subtitles
+            const subKey = cacheKeys.subtitle(platform, videoId)
+            const existingSub = await cacheService.get<SubtitleSegment[]>(subKey)
+            if (!existingSub) {
+                await cacheService.set(subKey, asrSubs)
+                console.log(`[useMindMap] Cached ASR subtitles for ${videoId}`)
+            }
+
             setAsrStep("generating")
-            await generateMindMap(asrSubs)
+            const script = asrSubs.map(s => s.text).join("\n")
+            await generateFromScript(script)
         } catch (e) {
             setError((e as Error).message)
         } finally {
@@ -147,5 +162,5 @@ export function useMindMap(isActive: boolean): UseMindMapResult {
         }
     }
 
-    return { markdown, loading, checkingCache, error, asrStep, checkCacheAndGenerate, handleDigitalASR }
+    return { markdown, loading, error, asrStep, checkCacheAndGenerate, handleDigitalASR }
 }

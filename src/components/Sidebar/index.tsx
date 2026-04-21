@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, FileText, MessageSquare, Bot, Network } from "lucide-react"
 import type { IPlatformService } from "../../services/platform/types"
 import { VideoProvider, useVideo } from "../../contexts/VideoContext"
+import { useTranslation } from "../../i18n/useTranslation"
+import { LanguageSwitcher } from "../LanguageSwitcher"
 import { SummaryPanel } from "./SummaryPanel"
 import { CommentsPanel } from "./CommentsPanel"
 import { AskAIPanel } from "./AskAIPanel"
@@ -22,25 +24,27 @@ function SidebarContent({ activeTab, setActiveTab, onClose }: {
     onClose: () => void
 }) {
     const { videoInfo } = useVideo()
+    const { t } = useTranslation()
 
     return (
         <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                <h2 className="font-bold text-gray-800 dark:text-gray-100 truncate flex-1 mr-4 text-sm">
-                    {videoInfo?.title || "Video Assistant"}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900 gap-2">
+                <h2 className="font-bold text-gray-800 dark:text-gray-100 truncate flex-1 text-sm">
+                    {videoInfo?.title || t("sidebar.defaultTitle")}
                 </h2>
-                <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 transition-colors">
+                <LanguageSwitcher variant="compact" />
+                <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 transition-colors" title={t("common.close")}>
                     <X size={20} />
                 </button>
             </div>
 
             {/* Tabs */}
             <div className="flex border-b border-gray-200 dark:border-gray-800">
-                <TabButton active={activeTab === "summary"} onClick={() => setActiveTab("summary")} icon={<FileText size={18} />} label="Summary" />
-                <TabButton active={activeTab === "comments"} onClick={() => setActiveTab("comments")} icon={<MessageSquare size={18} />} label="Comments" />
-                <TabButton active={activeTab === "chat"} onClick={() => setActiveTab("chat")} icon={<Bot size={18} />} label="Ask AI" />
-                <TabButton active={activeTab === "mindmap"} onClick={() => setActiveTab("mindmap")} icon={<Network size={18} />} label="MindMap" />
+                <TabButton active={activeTab === "summary"} onClick={() => setActiveTab("summary")} icon={<FileText size={18} />} label={t("sidebar.tabs.summary")} />
+                <TabButton active={activeTab === "comments"} onClick={() => setActiveTab("comments")} icon={<MessageSquare size={18} />} label={t("sidebar.tabs.comments")} />
+                <TabButton active={activeTab === "chat"} onClick={() => setActiveTab("chat")} icon={<Bot size={18} />} label={t("sidebar.tabs.askAI")} />
+                <TabButton active={activeTab === "mindmap"} onClick={() => setActiveTab("mindmap")} icon={<Network size={18} />} label={t("sidebar.tabs.mindmap")} />
             </div>
 
             {/* Content */}

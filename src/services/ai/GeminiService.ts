@@ -2,14 +2,16 @@ import { BaseAIService } from "./BaseAIService"
 import type { ChatMessage } from "./types"
 
 export class GeminiService extends BaseAIService {
-    constructor(apiKey: string) {
-        super(apiKey, "Gemini")
+    private baseUrl: string
+
+    constructor(apiKey: string, modelName: string = "gemini-1.5-pro", baseUrl: string = "https://generativelanguage.googleapis.com/v1beta") {
+        super(apiKey, modelName)
+        this.baseUrl = baseUrl.replace(/\/+$/, "")
     }
 
     async chat(messages: ChatMessage[], context?: string): Promise<string> {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${this.apiKey}`
+        const url = `${this.baseUrl}/models/${this.modelName}:generateContent?key=${this.apiKey}`
 
-        // Convert ChatMessage to Gemini format
         const contents = messages.map(m => ({
             role: m.role === "assistant" ? "model" : "user",
             parts: [{ text: m.content }]

@@ -1,168 +1,167 @@
 import type { SubtitleSegment } from "../types"
 
-function dbg(msg: string) {
-    console.log(`[YouTubeSubtitle] ${msg}`)
-}
+/**
+ * Fetch YouTube subtitles via XHR interception.
+ *
+ * Strategy:
+ * 1. Check if data was already captured (fast path via __vaTimedText).
+ * 2. Inject XHR interceptor + toggle subtitles, then poll __vaTimedText every 2s.
+ *    Re-toggle subtitles every 5s in case the player wasn't ready on first attempt.
+ * 3. Listen for timedtext XHR result via window.postMessage.
+ * 4. Parse the json3 format into SubtitleSegment[].
+ */
 
-function parseTimestamp(ts: string): number {
-    const parts = ts.split(":").map(Number)
-    if (parts.length === 2) return parts[0] * 60 + parts[1]
-    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-    return 0
-}
+let pendingResolve: ((segments: SubtitleSegment[]) => void) | null = null
+let pendingVideoId: string | null = null
 
-const SEGMENT_VARIANTS: { el: string; time: string; text: string[] }[] = [
-    { el: "ytd-transcript-segment-renderer", time: ".segment-timestamp", text: [".segment-text"] },
-    { el: "transcript-segment-view-model", time: ".ytwTranscriptSegmentViewModelTimestamp", text: [".ytAttributedStringHost", "span[role='text']", ".yt-core-attributed-string"] }
-]
+// Listen for timedtext results posted from MAIN world
+window.addEventListener("message", (event) => {
+    if (event.data?.type !== "VA_TIMEDTEXT_RESULT") return
+    if (!pendingResolve || event.data.videoId !== pendingVideoId) return
 
-function readSegmentsFromDOM(): SubtitleSegment[] {
-    for (const v of SEGMENT_VARIANTS) {
-        const segEls = document.querySelectorAll(v.el)
-        if (segEls.length === 0) continue
-        const segments: SubtitleSegment[] = []
-        segEls.forEach(seg => {
-            const time = seg.querySelector(v.time)?.textContent?.trim() || ""
-            let text = ""
-            for (const sel of v.text) {
-                text = seg.querySelector(sel)?.textContent?.trim().replace(/\s+/g, " ") || ""
-                if (text) break
-            }
-            if (text && time && !/^\{/.test(text)) {
-                const start = parseTimestamp(time)
-                segments.push({ start, end: start, text })
-            }
-        })
-        if (segments.length > 0) return segments
+    const json3: string = event.data.body
+    const segments = parseJson3(json3)
+    console.log(`[YouTubeSubtitle] Received ${segments.length} segments via postMessage`)
+    pendingResolve(segments)
+    pendingResolve = null
+    pendingVideoId = null
+})
+
+export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegment[]> {
+    console.log(`[YouTubeSubtitle] Requesting subtitles for ${videoId}`)
+    const t0 = Date.now()
+
+    // Wait for the YouTube player to be ready
+    await waitForPlayer()
+
+    // Fast path: check if data was already captured
+    const existing = await readFromMainWorld(videoId)
+    if (existing && existing.length > 0) {
+        console.log(`[YouTubeSubtitle] Found existing capture: ${existing.length} segments (${Date.now() - t0}ms)`)
+        return existing
     }
+
+    // Install XHR interceptor + toggle subtitles, then poll + re-toggle.
+    // Return as soon as we get data from any source.
+    const result = await new Promise<SubtitleSegment[] | null>((resolve) => {
+        let done = false
+        let pollTimer: ReturnType<typeof setInterval>
+        let toggleTimer: ReturnType<typeof setInterval>
+        let timeoutTimer: ReturnType<typeof setTimeout>
+
+        const cleanup = () => {
+            clearInterval(pollTimer)
+            clearInterval(toggleTimer)
+            clearTimeout(timeoutTimer)
+            pendingResolve = null
+            pendingVideoId = null
+        }
+
+        // --- Arm A: XHR interception via postMessage ---
+        pendingResolve = (segments) => {
+            if (done) return
+            done = true
+            cleanup()
+            console.log(`[YouTubeSubtitle] XHR intercept: ${segments.length} segments (${Date.now() - t0}ms)`)
+            resolve(segments)
+        }
+        pendingVideoId = videoId
+
+        // Initial toggle
+        sendToggle(videoId)
+
+        // --- Arm B: poll __vaTimedText every 2s ---
+        pollTimer = setInterval(async () => {
+            if (done) return
+            const polled = await readFromMainWorld(videoId)
+            if (polled && polled.length > 0) {
+                done = true
+                cleanup()
+                console.log(`[YouTubeSubtitle] Poll: ${polled.length} segments (${Date.now() - t0}ms)`)
+                resolve(polled)
+            }
+        }, 2000)
+
+        // --- Arm C: re-toggle every 5s (player may not have been ready initially) ---
+        toggleTimer = setInterval(() => {
+            if (done) return
+            console.log(`[YouTubeSubtitle] Re-toggling subtitles... (${Date.now() - t0}ms)`)
+            sendToggle(videoId)
+        }, 5000)
+
+        // Overall timeout: 20s
+        timeoutTimer = setTimeout(() => {
+            if (!done) {
+                done = true
+                cleanup()
+                console.warn(`[YouTubeSubtitle] Timed out after ${Date.now() - t0}ms — no subtitles found`)
+                resolve(null)
+            }
+        }, 20000)
+    })
+
+    if (result && result.length > 0) return result
+
+    console.warn("[YouTubeSubtitle] All attempts exhausted — no subtitles found")
     return []
 }
 
-async function scrollAndCollectAll(scrollEl: Element): Promise<SubtitleSegment[]> {
-    const seen = new Set<string>()
-    let allSegments: SubtitleSegment[] = []
-    let lastCount = 0
-    let stableRounds = 0
-
-    // Scroll in increments until no new segments appear
-    for (let i = 0; i < 100; i++) {
-        scrollEl.scrollTop += 800
-        await new Promise(r => setTimeout(r, 400))
-
-        const current = readSegmentsFromDOM()
-        current.forEach(s => {
-            const key = `${s.start}|${s.text}`
-            if (!seen.has(key)) {
-                seen.add(key)
-                allSegments.push(s)
+/** Send FETCH_YOUTUBE_SUBTITLES message to background to toggle subtitles. */
+function sendToggle(videoId: string) {
+    chrome.runtime.sendMessage(
+        { type: "FETCH_YOUTUBE_SUBTITLES", videoId },
+        (response) => {
+            if (chrome.runtime.lastError) {
+                console.warn("[YouTubeSubtitle] Toggle error:", chrome.runtime.lastError.message)
             }
-        })
-
-        if (allSegments.length === lastCount) {
-            stableRounds++
-            if (stableRounds >= 3) break
-        } else {
-            stableRounds = 0
-            lastCount = allSegments.length
         }
-    }
-
-    return allSegments.sort((a, b) => a.start - b.start)
+    )
 }
 
-function findTranscriptButton(): HTMLButtonElement | null {
-    const section = document.querySelector("ytd-video-description-transcript-section-renderer")
-    return (section?.querySelector("button") as HTMLButtonElement | null) ?? null
-}
-
-async function expandDescription(watchMeta: Element): Promise<void> {
-    const expandBtn = watchMeta.querySelector("tp-yt-paper-button#expand, #expand") as HTMLElement | null
-    if (expandBtn) {
-        expandBtn.click()
-        await new Promise(r => setTimeout(r, 400))
-    }
-}
-
-export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegment[]> {
-    dbg(`START for ${videoId}`)
-
-    try {
-        const watchMeta = document.querySelector("ytd-watch-metadata")
-        if (!watchMeta) {
-            dbg("No ytd-watch-metadata found")
-            return []
-        }
-
-        let transcriptBtn = findTranscriptButton()
-        if (!transcriptBtn) {
-            dbg("Transcript section not in DOM; expanding description...")
-            await expandDescription(watchMeta)
-            transcriptBtn = findTranscriptButton()
-        }
-
-        if (!transcriptBtn) {
-            dbg("Transcript section still absent (video has no subtitles)")
-            return []
-        }
-
-        dbg("Clicking transcript button")
-        transcriptBtn.click()
-
-        // Wait for the panel and initial segments to load
-        await new Promise(r => setTimeout(r, 2500))
-
-        const initialSegments = readSegmentsFromDOM()
-        dbg(`Initial segments visible: ${initialSegments.length}`)
-
-        if (initialSegments.length === 0) {
-            dbg("No segments found after panel opened")
-            return []
-        }
-
-        // Find the scrollable container inside the transcript panel
-        // YouTube has two panel variants: modern (PAmodern_transcript_view) and legacy (engagement-panel-searchable-transcript)
-        const panel = document.querySelector(
-            'ytd-engagement-panel-section-list-renderer[target-id="PAmodern_transcript_view"]'
-        ) || document.querySelector(
-            'ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-searchable-transcript"]'
+/** Ask background to read __vaTimedText from MAIN world and parse it. */
+async function readFromMainWorld(videoId: string): Promise<SubtitleSegment[] | null> {
+    return new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+            { type: "CHECK_YOUTUBE_SUBTITLES_CACHE", videoId },
+            (response) => {
+                if (chrome.runtime.lastError || !response?.success || !response.data?.length) {
+                    resolve(null)
+                    return
+                }
+                resolve(response.data)
+            }
         )
-        const scrollEl = panel?.querySelector("#body, .ytd-transcript-renderer, #content")
-            || panel?.querySelector("div[overflow-scroll]")
-            || panel
+    })
+}
 
-        dbg(`Scrolling panel (target=${panel?.getAttribute("target-id")}) to collect all segments...`)
-        let allSegments = await scrollAndCollectAll(scrollEl!)
+/** Wait up to 10s for the YouTube player element to mount. */
+function waitForPlayer(): Promise<void> {
+    return new Promise((resolve) => {
+        if (document.getElementById("movie_player")) return resolve()
+        const t0 = Date.now()
+        const timer = setInterval(() => {
+            if (document.getElementById("movie_player") || Date.now() - t0 > 10000) {
+                clearInterval(timer)
+                resolve()
+            }
+        }, 300)
+    })
+}
 
-        if (allSegments.length === 0) {
-            // Fallback: use initial segments
-            allSegments = initialSegments
-        }
+/** Parse YouTube json3 timedtext format into SubtitleSegment[]. */
+function parseJson3(raw: string): SubtitleSegment[] {
+    const data = JSON.parse(raw)
+    const events: any[] = data.events || []
+    const segments: SubtitleSegment[] = []
 
-        dbg(`Total segments collected: ${allSegments.length}`)
-
-        // Close the transcript panel using structural DOM selector (language-agnostic)
-        const closeBtn = panel?.querySelector(
-            "#header #navigation-button button, ytd-engagement-panel-title-header-renderer #navigation-button button"
-        ) as HTMLButtonElement | null
-        if (closeBtn) {
-            closeBtn.click()
-            dbg("Transcript panel closed")
-        } else {
-            dbg("Close button not found, panel may remain open")
-        }
-
-        // Fill in end times from next segment's start
-        for (let i = 0; i < allSegments.length - 1; i++) {
-            allSegments[i].end = allSegments[i + 1].start
-        }
-        if (allSegments.length > 0) {
-            const last = allSegments[allSegments.length - 1]
-            last.end = last.start + 5
-        }
-
-        return allSegments
-    } catch (e) {
-        dbg(`Exception: ${(e as Error).message}`)
-        return []
+    for (const ev of events) {
+        if (!ev.segs || ev.segs.length === 0) continue
+        const text = ev.segs.map((s: any) => s.utf8 ?? "").join("").trim()
+        if (!text) continue
+        const start = Math.round((ev.tStartMs || 0) / 10) / 100
+        const end = Math.round(((ev.tStartMs || 0) + (ev.dDurationMs || 0)) / 10) / 100
+        segments.push({ start, end, text })
     }
+
+    return segments
 }

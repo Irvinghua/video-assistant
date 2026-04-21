@@ -3,9 +3,16 @@ import { Send, Bot, User as UserIcon } from "lucide-react"
 import type { ChatMessage } from "../../services/ai/types"
 import { AIServiceFactory } from "../../services/ai/AIServiceFactory"
 import { useVideo } from "../../contexts/VideoContext"
+import { useApiKeyStatus } from "../../hooks/useApiKeyStatus"
+import { useI18n } from "../../i18n/I18nProvider"
+import { useTranslation } from "../../i18n/useTranslation"
+import { ConfigurePrompt } from "../ConfigurePrompt"
 
 export function AskAIPanel() {
     const { subtitles } = useVideo()
+    const { hasChatKey } = useApiKeyStatus()
+    const { aiLanguage } = useI18n()
+    const { t } = useTranslation()
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
@@ -25,15 +32,18 @@ export function AskAIPanel() {
 
         try {
             const contextText = subtitles.map(s => s.text).join(" ").slice(0, 20000)
+            const languageDirective = `\n\nIMPORTANT: Respond in ${aiLanguage}.`
             const aiService = await AIServiceFactory.getService()
-            const response = await aiService.chat([...messages, userMsg], contextText)
+            const response = await aiService.chat([...messages, userMsg], contextText + languageDirective)
             setMessages(prev => [...prev, { role: "assistant", content: response }])
         } catch (error) {
-            setMessages(prev => [...prev, { role: "assistant", content: "Error: " + (error as Error).message }])
+            setMessages(prev => [...prev, { role: "assistant", content: t("askAI.errorPrefix") + (error as Error).message }])
         } finally {
             setLoading(false)
         }
     }
+
+    if (!hasChatKey) return <ConfigurePrompt kind="chat" />
 
     return (
         <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
@@ -42,8 +52,8 @@ export function AskAIPanel() {
                 {messages.length === 0 && (
                     <div className="text-center text-gray-500 mt-10">
                         <Bot size={48} className="mx-auto mb-2 opacity-50" />
-                        <p>Ask anything about the video!</p>
-                        <p className="text-xs mt-2 text-gray-400">Context includes subtitles and summary.</p>
+                        <p>{t("askAI.emptyTitle")}</p>
+                        <p className="text-xs mt-2 text-gray-400">{t("askAI.emptyDesc")}</p>
                     </div>
                 )}
 
@@ -83,7 +93,7 @@ export function AskAIPanel() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                        placeholder="Ask a question..."
+                        placeholder={t("askAI.inputPlaceholder")}
                         className="flex-1 border dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         disabled={loading}
                     />

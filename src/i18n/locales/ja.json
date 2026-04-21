@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "close": "閉じる"
+  },
+  "popup": {
+    "title": "ビデオAIアシスタント",
+    "description": "BilibiliまたはYouTubeの動画ページで使用できます。",
+    "openSettings": "設定を開く"
+  },
+  "toggleButton": {
+    "open": "ビデオAIアシスタントを開く"
+  },
+  "sidebar": {
+    "defaultTitle": "ビデオアシスタント",
+    "tabs": {
+      "summary": "要約",
+      "comments": "コメント",
+      "askAI": "AIに質問",
+      "mindmap": "マインドマップ"
+    },
+    "languageSwitcher": {
+      "tooltip": "UI言語を切り替え"
+    }
+  },
+  "summary": {
+    "analyzing": "AIが分析中...",
+    "asrNote": "デジタル音声を抽出中。お待ちください。",
+    "title": "要約",
+    "videoIdCached": "動画ID: {{id}} | キャッシュ済み",
+    "clearCache": "キャッシュクリア",
+    "clearCacheTooltip": "この動画のキャッシュをクリア",
+    "cacheClearedToast": "キャッシュをクリアしました。",
+    "export": "エクスポート",
+    "sections": {
+      "digest": "ダイジェスト",
+      "keyPoints": "要点"
+    },
+    "detecting": "動画コンテンツを検出中...",
+    "detectingDesc": "字幕情報を取得しています",
+    "noSubtitles": "字幕が見つかりません",
+    "noSubtitlesDesc": "デジタル音声を抽出してAIで処理しますか？",
+    "summarizeViaAsr": "ASRで要約",
+    "subtitlesAvailable": "字幕利用可能",
+    "subtitlesAvailableDesc": "{{id}} で {{count}} 行の字幕を取得しました。",
+    "generateNow": "今すぐ要約を生成",
+    "subtitlePreview": "字幕プレビュー",
+    "andMoreLines": "... 他 {{count}} 行",
+    "errors": {
+      "noContent": "要約する内容がありません。",
+      "noAudio": "この動画は音声抽出に対応していません。",
+      "transcriptionEmpty": "文字起こし結果が空です。"
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "URL取得中",
+      "downloading": "ダウンロード中",
+      "transcribing": "文字起こし中",
+      "summarizing": "要約中",
+      "generating": "生成中"
+    }
+  },
+  "comments": {
+    "fetching": "コメントを取得中...",
+    "sampledStats": "{{total}} 件のコメントをサンプリング（共感 {{consensus}} + 議論 {{controversial}}）。",
+    "analysisHint": "分析は動画要約と組み合わせ、共感 / 対立 / ギャップ / 雰囲気を出力します。",
+    "analyzeBtn": "コメントを分析",
+    "analyzing": "コメントを分析中...",
+    "reportTitle": "📊 世論レポート",
+    "sections": {
+      "consensus": "🤝 主な共感",
+      "divergences": "⚡ 主な対立",
+      "gap": "🔍 動画 vs コメント (ギャップ)",
+      "spotlight": "💡 注目の意見"
+    },
+    "heatLabel": "熱度: {{level}}",
+    "heat": {
+      "extreme": "極めて高い",
+      "high": "高い",
+      "medium": "中"
+    },
+    "noConsensus": "明確な共感は検出されませんでした。",
+    "noDivergence": "目立った対立は検出されませんでした。",
+    "sideA": "A 派:",
+    "sideB": "B 派:",
+    "rootCause": "原因:",
+    "hit": "命中",
+    "miss": "盲点 / 溢出",
+    "errors": {
+      "noComments": "分析できるコメントがありません。",
+      "needSubtitle": "コメント分析の前に、まず動画字幕を取得してください（要約 または ASRで要約）。"
+    }
+  },
+  "askAI": {
+    "emptyTitle": "動画について何でも質問してください！",
+    "emptyDesc": "コンテキストには字幕と要約が含まれます。",
+    "inputPlaceholder": "質問を入力...",
+    "errorPrefix": "エラー: "
+  },
+  "mindmap": {
+    "generating": "AIがマインドマップを生成中...",
+    "preparing": "マインドマップを準備中...",
+    "linesAvailable": "{{count}} 行の字幕を取得済み",
+    "errors": {
+      "noAudio": "この動画はデジタル抽出に対応していません。"
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "チャットモデルが未設定です",
+      "button": "チャットモデルを設定",
+      "desc": "上のボタンから設定画面を開き、「要約 & チャットモデル」の API キーを入力してください。これがないと要約・コメント分析・AIへの質問・マインドマップ作成が利用できません。"
+    },
+    "asr": {
+      "title": "音声認識が未設定です",
+      "button": "ASR プロバイダーを設定",
+      "desc": "この動画には字幕がありません。上のボタンから設定画面を開き、ASR の API キーを入力してください。設定後、拡張機能が音声を文字に書き起こします。"
+    }
+  },
+  "options": {
+    "title": "設定",
+    "savedToast": "設定を保存しました！",
+    "sections": {
+      "language": "言語",
+      "aiModel": "要約 & チャットモデル",
+      "aiModelDesc": "動画要約、コメント分析、AI への質問、マインドマップ生成に使用します。プロバイダーを選択し、ご自身の API Key を入力してください。",
+      "asr": "リモートASR",
+      "asrDesc": "公式字幕がない動画に使用します。デジタル音声を抽出してこの API に送信し、文字起こしを行います。",
+      "cache": "ストレージ & キャッシュ",
+      "export": "ナレッジ書き出し"
+    },
+    "labels": {
+      "uiLanguage": "UI言語",
+      "provider": "プロバイダー",
+      "apiKey": "{{provider}} API Key",
+      "chatModel": "モデル指定",
+      "asrModel": "モデル指定",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "ASR API Key",
+      "cacheDays": "キャッシュ有効期間（日）",
+      "notionToken": "Notion Token",
+      "readwiseToken": "Readwise Token",
+      "obsidianVault": "Obsidian Vault パス"
+    },
+    "placeholders": {
+      "chatApiKey": "{{provider}} の API Key を入力",
+      "chatEndpoint": "例: https://api.openai.com/v1",
+      "asrApiKey": "{{provider}} の API Key を入力",
+      "asrEndpoint": "例: https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/path/to/vault"
+    },
+    "languageHint": "サイドバー / ポップアップ / 設定画面の UI 言語、および AI の応答言語に影響します。",
+    "clearAllCache": "全キャッシュをクリア",
+    "cacheCleared": "クリアしました！",
+    "storageNote": "すべてのキーはブラウザのローカルにのみ保存されます。",
+    "freeHint": {
+      "signup": "登録ページ：",
+      "keyPage": "API Key 作成ページ：",
+      "usage": "作成後、上のドロップダウンから対応するモデルを選び、API Key を入力欄に貼り付けてください。",
+      "help": "登録や API Key 作成の手順がわからない場合は、任意の AI チャットボットに聞けば操作手順を案内してもらえます。",
+      "chatIntro": "有料の AI モデル API Key をまだ購入していない場合は、Ollama への登録をおすすめします。無料で API Key を登録でき、無料ユーザー向けの利用枠も十分で、軽めの利用であれば十分まかなえます。",
+      "asrIntro": "有料の AI モデル API Key をまだ購入していない場合は、Groq への登録をおすすめします。無料で API Key を登録でき、無料ユーザー向けの利用枠も十分で、軽めの利用であれば十分まかなえます。"
+    },
+    "ollama": {
+      "loading": "Ollama Cloud から利用可能なモデルを取得中...",
+      "fetchFailed": "Ollama モデル一覧の取得に失敗しました: {{error}}。デフォルト一覧を表示しています。"
+    },
+    "saveBtn": "全設定を保存"
+  }
+}

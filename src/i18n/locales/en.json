@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close"
+  },
+  "popup": {
+    "title": "Video AI Assistant",
+    "description": "Open a Bilibili or YouTube video to use the assistant.",
+    "openSettings": "Open Settings"
+  },
+  "toggleButton": {
+    "open": "Open Video AI Assistant"
+  },
+  "sidebar": {
+    "defaultTitle": "Video Assistant",
+    "tabs": {
+      "summary": "Summary",
+      "comments": "Comments",
+      "askAI": "Ask AI",
+      "mindmap": "MindMap"
+    },
+    "languageSwitcher": {
+      "tooltip": "Switch UI language"
+    }
+  },
+  "summary": {
+    "analyzing": "AI is analyzing...",
+    "asrNote": "Digital extraction. Please wait.",
+    "title": "Summary",
+    "videoIdCached": "Video ID: {{id}} | Cached",
+    "clearCache": "Clear Cache",
+    "clearCacheTooltip": "Clear this video's cache",
+    "cacheClearedToast": "Cache cleared.",
+    "export": "Export",
+    "sections": {
+      "digest": "Digest",
+      "keyPoints": "Key Points"
+    },
+    "detecting": "Detecting video content...",
+    "detectingDesc": "Fetching video subtitle info",
+    "noSubtitles": "No Subtitles Found",
+    "noSubtitlesDesc": "Extract digital audio and use AI?",
+    "summarizeViaAsr": "Summarize via ASR",
+    "subtitlesAvailable": "Subtitles Available",
+    "subtitlesAvailableDesc": "We found {{count}} lines for {{id}}.",
+    "generateNow": "Generate Summary Now",
+    "subtitlePreview": "SUBTITLE PREVIEW",
+    "andMoreLines": "... and {{count}} more lines",
+    "errors": {
+      "noContent": "No content available to summarize.",
+      "noAudio": "This video does not support audio extraction.",
+      "transcriptionEmpty": "Transcription result is empty."
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "GETTING URL",
+      "downloading": "DOWNLOADING",
+      "transcribing": "TRANSCRIBING",
+      "summarizing": "SUMMARIZING",
+      "generating": "GENERATING"
+    }
+  },
+  "comments": {
+    "fetching": "Fetching comments...",
+    "sampledStats": "{{total}} comments sampled (Consensus {{consensus}} + Controversial {{controversial}}).",
+    "analysisHint": "Analysis combines video summary to output consensus / divergence / gap / mood.",
+    "analyzeBtn": "Analyze Comments",
+    "analyzing": "Analyzing comments...",
+    "reportTitle": "📊 Public Opinion Report",
+    "sections": {
+      "consensus": "🤝 Core Consensus",
+      "divergences": "⚡ Main Divergences",
+      "gap": "🔍 Video vs Comments (Gap)",
+      "spotlight": "💡 Spotlight Insights"
+    },
+    "heatLabel": "Heat: {{level}}",
+    "heat": {
+      "extreme": "Extreme",
+      "high": "High",
+      "medium": "Medium"
+    },
+    "noConsensus": "No clear consensus detected.",
+    "noDivergence": "No notable divergence detected.",
+    "sideA": "Side A:",
+    "sideB": "Side B:",
+    "rootCause": "Root cause:",
+    "hit": "HIT",
+    "miss": "MISS / OVERFLOW",
+    "errors": {
+      "noComments": "No comments available to analyze.",
+      "needSubtitle": "Please fetch video subtitles first (Summarize or Summarize via ASR) before analyzing comments."
+    }
+  },
+  "askAI": {
+    "emptyTitle": "Ask anything about the video!",
+    "emptyDesc": "Context includes subtitles and summary.",
+    "inputPlaceholder": "Ask a question...",
+    "errorPrefix": "Error: "
+  },
+  "mindmap": {
+    "generating": "AI is generating mind map...",
+    "preparing": "Preparing mind map...",
+    "linesAvailable": "{{count}} lines available",
+    "errors": {
+      "noAudio": "This video does not support digital extraction."
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "Chat Model Not Configured",
+      "button": "Configure Chat Model",
+      "desc": "Click the button above to open Settings and add the API key for your Summary & Chat model. The plugin needs it before it can summarize, analyze comments, answer questions, or build mind maps."
+    },
+    "asr": {
+      "title": "Speech-to-Text Not Configured",
+      "button": "Configure ASR Provider",
+      "desc": "This video has no captions. Click the button above to open Settings and add an ASR API key. The plugin will then transcribe the audio for you."
+    }
+  },
+  "options": {
+    "title": "Configuration",
+    "savedToast": "Settings saved!",
+    "sections": {
+      "language": "Language",
+      "aiModel": "Summary & Chat Model",
+      "aiModelDesc": "Used for video summaries, comment analysis, Ask AI, and mind-map generation. Pick a provider and supply your own API key.",
+      "asr": "Remote ASR",
+      "asrDesc": "Used for videos without official subtitles. Digital audio is extracted and sent to this API for transcription.",
+      "cache": "Storage & Cache",
+      "export": "Knowledge Export"
+    },
+    "labels": {
+      "uiLanguage": "UI Language",
+      "provider": "Provider",
+      "apiKey": "{{provider}} API Key",
+      "chatModel": "Specify Model",
+      "asrModel": "Specify Model",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "ASR API Key",
+      "cacheDays": "Cache Validity (Days)",
+      "notionToken": "Notion Token",
+      "readwiseToken": "Readwise Token",
+      "obsidianVault": "Obsidian Vault Path"
+    },
+    "placeholders": {
+      "chatApiKey": "Enter API Key for {{provider}}",
+      "chatEndpoint": "e.g. https://api.openai.com/v1",
+      "asrApiKey": "Enter API Key for {{provider}}",
+      "asrEndpoint": "e.g. https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/path/to/vault"
+    },
+    "languageHint": "Affects sidebar / popup / options UI, and the language the AI answers in.",
+    "clearAllCache": "Clear All Cache",
+    "cacheCleared": "Cleared!",
+    "storageNote": "All keys are stored locally in your browser.",
+    "freeHint": {
+      "signup": "Sign-up page:",
+      "keyPage": "Create API Key:",
+      "usage": "Once created, select the matching model in the dropdown above and paste the API Key into the input field.",
+      "help": "Unfamiliar with the sign-up or key creation steps? Ask any AI chatbot to walk you through it.",
+      "chatIntro": "If you don't have any paid AI model API Key yet, we recommend signing up for Ollama. You can register an API Key for free, and free users get a generous quota that's plenty for non-heavy usage.",
+      "asrIntro": "If you don't have any paid AI model API Key yet, we recommend signing up for Groq. You can register an API Key for free, and free users get a generous quota that's plenty for non-heavy usage."
+    },
+    "ollama": {
+      "loading": "Fetching available models from Ollama Cloud...",
+      "fetchFailed": "Failed to fetch Ollama model list: {{error}}. Showing default list."
+    },
+    "saveBtn": "Save All Settings"
+  }
+}

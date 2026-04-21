@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import type { IPlatformService, VideoInfo, SubtitleSegment, SampledComments } from "../services/platform/types"
-import type { SummaryResult } from "../services/ai/types"
+import type { SummaryResult, CommentAnalysis } from "../services/ai/types"
+import { cacheService, cacheKeys } from "../services/cache/CacheService"
+
+export interface VideoCacheSnapshot {
+    summary: SummaryResult | null
+    comments: CommentAnalysis | null
+    mindmap: string | null
+    sampledComments: SampledComments | null
+}
 
 interface VideoContextValue {
     service: IPlatformService
@@ -10,10 +18,13 @@ interface VideoContextValue {
     sampledComments: SampledComments | null
     dataLoading: boolean
     summaryResult: SummaryResult | null
+    cachedData: VideoCacheSnapshot
     setSubtitles: (subs: SubtitleSegment[]) => void
     setSummaryResult: (result: SummaryResult | null) => void
     seekTo: (seconds: number) => void
 }
+
+const EMPTY_CACHE: VideoCacheSnapshot = { summary: null, comments: null, mindmap: null, sampledComments: null }
 
 const VideoContext = createContext<VideoContextValue | null>(null)
 
@@ -35,6 +46,7 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
     const [sampledComments, setSampledComments] = useState<SampledComments | null>(null)
     const [dataLoading, setDataLoading] = useState(true)
     const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null)
+    const [cachedData, setCachedData] = useState<VideoCacheSnapshot>(EMPTY_CACHE)
 
     const platform = service.getPlatformName()
 
@@ -43,21 +55,72 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
     const loadData = useCallback(async (videoId: string) => {
         setDataLoading(true)
         try {
-            const [subs, sampled] = await Promise.all([
-                service.getSubtitles(videoId).catch(e => { console.error("[VideoContext] Subtitle error:", e); return [] as SubtitleSegment[] }),
-                service.getComments(videoId).catch(e => { console.error("[VideoContext] Comment error:", e); return emptySampled })
-            ])
-            if (service.detectVideo()?.id === videoId) {
-                setSubtitles(subs)
-                setSampledComments(sampled)
-                console.log(`[VideoContext] Data loaded for ${videoId}. Subs: ${subs.length}, Comments consensus=${sampled.consensus.length}, controversial=${sampled.controversial.length}`)
+            // Fetch subtitles first — UI unblocks as soon as subs arrive.
+            const subs = await service.getSubtitles(videoId).catch(e => {
+                console.error("[VideoContext] Subtitle error:", e)
+                return [] as SubtitleSegment[]
+            })
+
+            if (service.detectVideo()?.id !== videoId) return
+
+            setSubtitles(subs)
+            setDataLoading(false) // UI can proceed immediately
+
+            // Cache subtitles in background
+            if (subs.length > 0) {
+                const subKey = cacheKeys.subtitle(platform, videoId)
+                const existing = await cacheService.get<SubtitleSegment[]>(subKey)
+                if (!existing) {
+                    await cacheService.set(subKey, subs)
+                    console.log(`[VideoContext] Cached ${subs.length} subtitle segments for ${videoId}`)
+                }
+            }
+
+            console.log(`[VideoContext] Subtitles ready for ${videoId}: ${subs.length} segments`)
+
+            // Comments: use cache if available, otherwise fetch from platform
+            const sampledKey = cacheKeys.sampledComments(platform, videoId)
+            const cachedSampled = await cacheService.get<SampledComments>(sampledKey)
+            if (cachedSampled) {
+                setSampledComments(cachedSampled)
+                console.log(`[VideoContext] Using cached comments for ${videoId}`)
+            } else {
+                service.getComments(videoId)
+                    .then(async sampled => {
+                        if (service.detectVideo()?.id === videoId) {
+                            setSampledComments(sampled)
+                            console.log(`[VideoContext] Comments loaded for ${videoId}: consensus=${sampled.consensus.length}, controversial=${sampled.controversial.length}`)
+                            if (sampled.consensus.length + sampled.controversial.length > 0) {
+                                await cacheService.set(sampledKey, sampled)
+                            }
+                        }
+                    })
+                    .catch(e => console.error("[VideoContext] Comment error:", e))
             }
         } catch (e) {
             console.error("[VideoContext] Failed to load video data", e)
-        } finally {
             setDataLoading(false)
         }
     }, [service])
+
+    /** Batch-read all cache types for a video in one IPC call */
+    const loadCachedData = useCallback(async (videoId: string) => {
+        const summaryKey = cacheKeys.summary(platform, videoId)
+        const commentsKey = cacheKeys.comments(platform, videoId)
+        const mindmapKey = cacheKeys.mindmap(platform, videoId)
+        const sampledCommentsKey = cacheKeys.sampledComments(platform, videoId)
+        const batch = await cacheService.getBatch([summaryKey, commentsKey, mindmapKey, sampledCommentsKey])
+        const snapshot: VideoCacheSnapshot = {
+            summary: batch[summaryKey] ?? null,
+            comments: batch[commentsKey] ?? null,
+            mindmap: batch[mindmapKey] ?? null,
+            sampledComments: batch[sampledCommentsKey] ?? null,
+        }
+        setCachedData(snapshot)
+        if (snapshot.summary) setSummaryResult(snapshot.summary)
+        if (snapshot.sampledComments) setSampledComments(snapshot.sampledComments)
+        console.log(`[VideoContext] Batch cache loaded for ${videoId}: summary=${!!snapshot.summary}, comments=${!!snapshot.comments}, mindmap=${!!snapshot.mindmap}, sampledComments=${!!snapshot.sampledComments}`)
+    }, [platform])
 
     useEffect(() => {
         if (!isOpen) return
@@ -73,10 +136,24 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
                 setSubtitles([])
                 setSampledComments(null)
                 setSummaryResult(null)
+                setCachedData(EMPTY_CACHE)
+                loadCachedData(info.id)
             }
             loadData(info.id)
         }
     }, [isOpen, service, videoInfo?.id])
+
+    // Listen for CACHE_CLEARED to reset
+    useEffect(() => {
+        const handleMessage = (message: any) => {
+            if (message.type === "CACHE_CLEARED") {
+                setSummaryResult(null)
+                setCachedData(EMPTY_CACHE)
+            }
+        }
+        chrome.runtime.onMessage.addListener(handleMessage)
+        return () => chrome.runtime.onMessage.removeListener(handleMessage)
+    }, [])
 
     const seekTo = useCallback((seconds: number) => service.seekTo(seconds), [service])
 
@@ -89,6 +166,7 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
             sampledComments,
             dataLoading,
             summaryResult,
+            cachedData,
             setSubtitles,
             setSummaryResult,
             seekTo,

@@ -1,4 +1,4 @@
-export type CacheDataType = "summary" | "comments" | "subtitles" | "mindmap"
+export type CacheDataType = "summary" | "comments" | "subtitles" | "mindmap" | "sampledcomments"
 
 export interface CacheEntry<T> {
     key: string

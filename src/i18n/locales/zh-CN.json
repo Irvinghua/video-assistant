@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "close": "关闭"
+  },
+  "popup": {
+    "title": "视频 AI 助手",
+    "description": "打开 B 站或 YouTube 视频页即可使用。",
+    "openSettings": "打开设置"
+  },
+  "toggleButton": {
+    "open": "打开视频 AI 助手"
+  },
+  "sidebar": {
+    "defaultTitle": "视频助手",
+    "tabs": {
+      "summary": "摘要",
+      "comments": "评论",
+      "askAI": "问 AI",
+      "mindmap": "思维导图"
+    },
+    "languageSwitcher": {
+      "tooltip": "切换界面语言"
+    }
+  },
+  "summary": {
+    "analyzing": "AI 正在分析...",
+    "asrNote": "正在从数字音频提取。请稍候。",
+    "title": "视频摘要",
+    "videoIdCached": "视频 ID：{{id}} | 已缓存",
+    "clearCache": "清除缓存",
+    "clearCacheTooltip": "清除此视频的缓存",
+    "cacheClearedToast": "缓存已清除。",
+    "export": "导出",
+    "sections": {
+      "digest": "精简稿",
+      "keyPoints": "关键要点"
+    },
+    "detecting": "检测视频内容中...",
+    "detectingDesc": "正在获取视频字幕信息",
+    "noSubtitles": "未发现字幕",
+    "noSubtitlesDesc": "提取数字音频并用 AI 处理？",
+    "summarizeViaAsr": "通过 ASR 总结",
+    "subtitlesAvailable": "字幕可用",
+    "subtitlesAvailableDesc": "已获取 {{count}} 行字幕（视频 {{id}}）。",
+    "generateNow": "立即生成摘要",
+    "subtitlePreview": "字幕预览",
+    "andMoreLines": "... 还有 {{count}} 行",
+    "errors": {
+      "noContent": "没有可总结的内容。",
+      "noAudio": "此视频不支持音频提取。",
+      "transcriptionEmpty": "转写结果为空。"
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "获取 URL",
+      "downloading": "下载音频",
+      "transcribing": "语音转写",
+      "summarizing": "生成摘要",
+      "generating": "生成中"
+    }
+  },
+  "comments": {
+    "fetching": "正在获取评论中...",
+    "sampledStats": "已抽样 {{total}} 条评论（共识 {{consensus}} + 争议 {{controversial}}）。",
+    "analysisHint": "分析会结合视频摘要，输出共识 / 分歧 / Gap / 氛围。",
+    "analyzeBtn": "分析评论",
+    "analyzing": "正在分析评论...",
+    "reportTitle": "📊 舆情全景报告",
+    "sections": {
+      "consensus": "🤝 核心共识",
+      "divergences": "⚡ 主要分歧",
+      "gap": "🔍 视频 vs 评论 (Gap)",
+      "spotlight": "💡 独立见解"
+    },
+    "heatLabel": "热度：{{level}}",
+    "heat": {
+      "extreme": "极高",
+      "high": "高",
+      "medium": "中"
+    },
+    "noConsensus": "暂无明显共识。",
+    "noDivergence": "未检测到明显分歧。",
+    "sideA": "A 派：",
+    "sideB": "B 派：",
+    "rootCause": "根源：",
+    "hit": "命中区",
+    "miss": "盲区 / 溢出",
+    "errors": {
+      "noComments": "没有可分析的评论。",
+      "needSubtitle": "请先获取视频字幕（Summarize 或 Summarize via ASR），再分析评论。"
+    }
+  },
+  "askAI": {
+    "emptyTitle": "问任何关于这个视频的问题！",
+    "emptyDesc": "上下文包含字幕与摘要。",
+    "inputPlaceholder": "请输入问题...",
+    "errorPrefix": "错误："
+  },
+  "mindmap": {
+    "generating": "AI 正在生成思维导图...",
+    "preparing": "准备生成思维导图...",
+    "linesAvailable": "已获取 {{count}} 行字幕",
+    "errors": {
+      "noAudio": "此视频不支持数字音频提取。"
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "尚未配置对话模型",
+      "button": "去配置语言模型",
+      "desc": "请先点击上方按钮，打开设置页填入「摘要 & 对话模型」的 API Key。配置完成后才能使用视频总结、评论分析、问 AI 与思维导图功能。"
+    },
+    "asr": {
+      "title": "尚未配置语音转写",
+      "button": "去配置语音转写",
+      "desc": "本视频没有字幕，需要先点击上方按钮，在设置页填入 ASR 服务的 API Key，插件才能下载音频并转写为文字。"
+    }
+  },
+  "options": {
+    "title": "设置",
+    "savedToast": "设置已保存！",
+    "sections": {
+      "language": "语言",
+      "aiModel": "摘要 & 对话模型",
+      "aiModelDesc": "用于视频摘要、评论分析、Ask AI 和思维导图生成。请选择模型厂商并填入自己的 API Key。",
+      "asr": "远程 ASR",
+      "asrDesc": "用于没有官方字幕的视频。会提取数字音频并发送到此 API 进行转写。",
+      "cache": "存储与缓存",
+      "export": "知识导出"
+    },
+    "labels": {
+      "uiLanguage": "界面语言",
+      "provider": "模型厂商",
+      "apiKey": "{{provider}} API Key",
+      "chatModel": "指定模型",
+      "asrModel": "指定模型",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "ASR API Key",
+      "cacheDays": "缓存有效期（天）",
+      "notionToken": "Notion Token",
+      "readwiseToken": "Readwise Token",
+      "obsidianVault": "Obsidian Vault 路径"
+    },
+    "placeholders": {
+      "chatApiKey": "请输入 {{provider}} 的 API Key",
+      "chatEndpoint": "例如 https://api.openai.com/v1",
+      "asrApiKey": "请输入 {{provider}} 的 API Key",
+      "asrEndpoint": "例如 https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/path/to/vault"
+    },
+    "languageHint": "影响侧边栏 / 弹窗 / 设置页的界面语言，以及 AI 回答所用的语言。",
+    "clearAllCache": "清除全部缓存",
+    "cacheCleared": "已清除！",
+    "storageNote": "所有 Key 仅保存在本地浏览器中。",
+    "freeHint": {
+      "signup": "注册页面：",
+      "keyPage": "创建 API Key 页面：",
+      "usage": "创建完毕，下拉框选择相应模型，将 API Key 复制粘贴到输入框。",
+      "help": "如果对该平台账号注册，以及创建 API Key 步骤不了解，可咨询任意 AI 大模型来指导您操作。",
+      "chatIntro": "如您暂无购买任何 AI 大模型 API Key，推荐注册使用 Ollama 平台。该平台可以免费注册 API Key，并且给免费用户赠送的额度比较宽裕，让您在非高频使用状态下足够花销。",
+      "asrIntro": "如您暂无购买任何 AI 大模型 API Key，推荐注册使用 Groq 平台。该平台可以免费注册 API Key，并且给免费用户赠送的额度比较宽裕，让您在非高频使用状态下足够花销。"
+    },
+    "ollama": {
+      "loading": "正在从 Ollama Cloud 获取可用模型列表…",
+      "fetchFailed": "获取 Ollama 模型列表失败：{{error}}。已显示默认列表。"
+    },
+    "saveBtn": "保存全部设置"
+  }
+}

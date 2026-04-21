@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "close": "Fechar"
+  },
+  "popup": {
+    "title": "Assistente de Vídeo IA",
+    "description": "Abra um vídeo do Bilibili ou YouTube para usar o assistente.",
+    "openSettings": "Abrir configurações"
+  },
+  "toggleButton": {
+    "open": "Abrir Assistente de Vídeo IA"
+  },
+  "sidebar": {
+    "defaultTitle": "Assistente de Vídeo",
+    "tabs": {
+      "summary": "Resumo",
+      "comments": "Comentários",
+      "askAI": "Perguntar à IA",
+      "mindmap": "Mapa Mental"
+    },
+    "languageSwitcher": {
+      "tooltip": "Alterar idioma da interface"
+    }
+  },
+  "summary": {
+    "analyzing": "A IA está analisando...",
+    "asrNote": "Extraindo áudio digital. Por favor, aguarde.",
+    "title": "Resumo",
+    "videoIdCached": "ID do vídeo: {{id}} | Em cache",
+    "clearCache": "Limpar cache",
+    "clearCacheTooltip": "Limpar cache deste vídeo",
+    "cacheClearedToast": "Cache limpo.",
+    "export": "Exportar",
+    "sections": {
+      "digest": "Síntese",
+      "keyPoints": "Pontos-chave"
+    },
+    "detecting": "Detectando conteúdo do vídeo...",
+    "detectingDesc": "Obtendo informações de legenda",
+    "noSubtitles": "Nenhuma legenda encontrada",
+    "noSubtitlesDesc": "Extrair áudio digital e usar IA?",
+    "summarizeViaAsr": "Resumir via ASR",
+    "subtitlesAvailable": "Legendas disponíveis",
+    "subtitlesAvailableDesc": "Encontramos {{count}} linhas para {{id}}.",
+    "generateNow": "Gerar resumo agora",
+    "subtitlePreview": "PRÉVIA DAS LEGENDAS",
+    "andMoreLines": "... e mais {{count}} linhas",
+    "errors": {
+      "noContent": "Sem conteúdo para resumir.",
+      "noAudio": "Este vídeo não suporta extração de áudio.",
+      "transcriptionEmpty": "O resultado da transcrição está vazio."
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "OBTENDO URL",
+      "downloading": "BAIXANDO",
+      "transcribing": "TRANSCREVENDO",
+      "summarizing": "RESUMINDO",
+      "generating": "GERANDO"
+    }
+  },
+  "comments": {
+    "fetching": "Obtendo comentários...",
+    "sampledStats": "{{total}} comentários amostrados (Consenso {{consensus}} + Controvérsia {{controversial}}).",
+    "analysisHint": "A análise combina o resumo do vídeo com consenso / divergência / lacuna / clima.",
+    "analyzeBtn": "Analisar comentários",
+    "analyzing": "Analisando comentários...",
+    "reportTitle": "📊 Relatório de opinião pública",
+    "sections": {
+      "consensus": "🤝 Consenso central",
+      "divergences": "⚡ Principais divergências",
+      "gap": "🔍 Vídeo vs Comentários (Lacuna)",
+      "spotlight": "💡 Insights em destaque"
+    },
+    "heatLabel": "Intensidade: {{level}}",
+    "heat": {
+      "extreme": "Extrema",
+      "high": "Alta",
+      "medium": "Média"
+    },
+    "noConsensus": "Nenhum consenso claro detectado.",
+    "noDivergence": "Nenhuma divergência notável detectada.",
+    "sideA": "Lado A:",
+    "sideB": "Lado B:",
+    "rootCause": "Causa raiz:",
+    "hit": "ACERTO",
+    "miss": "DESVIO / EXTRAVASAMENTO",
+    "errors": {
+      "noComments": "Sem comentários para analisar.",
+      "needSubtitle": "Por favor, obtenha primeiro as legendas (Resumir ou Resumir via ASR) antes de analisar os comentários."
+    }
+  },
+  "askAI": {
+    "emptyTitle": "Pergunte qualquer coisa sobre o vídeo!",
+    "emptyDesc": "O contexto inclui legendas e resumo.",
+    "inputPlaceholder": "Faça uma pergunta...",
+    "errorPrefix": "Erro: "
+  },
+  "mindmap": {
+    "generating": "A IA está gerando o mapa mental...",
+    "preparing": "Preparando o mapa mental...",
+    "linesAvailable": "{{count}} linhas disponíveis",
+    "errors": {
+      "noAudio": "Este vídeo não suporta extração digital."
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "Modelo de chat não configurado",
+      "button": "Configurar modelo de chat",
+      "desc": "Clique no botão acima para abrir as Configurações e adicionar a API Key do modelo de Resumo e Chat. A extensão precisa dela antes de resumir, analisar comentários, responder perguntas ou gerar mapas mentais."
+    },
+    "asr": {
+      "title": "Transcrição de áudio não configurada",
+      "button": "Configurar provedor ASR",
+      "desc": "Este vídeo não tem legendas. Clique no botão acima para abrir as Configurações e adicionar uma API Key de ASR. Depois disso, a extensão transcreverá o áudio para você."
+    }
+  },
+  "options": {
+    "title": "Configurações",
+    "savedToast": "Configurações salvas!",
+    "sections": {
+      "language": "Idioma",
+      "aiModel": "Modelo de Resumo e Chat",
+      "aiModelDesc": "Usado para resumos de vídeo, análise de comentários, Ask AI e geração de mapas mentais. Escolha um provedor e forneça sua própria API Key.",
+      "asr": "ASR Remoto",
+      "asrDesc": "Usado para vídeos sem legendas oficiais. O áudio digital é extraído e enviado a esta API para transcrição.",
+      "cache": "Armazenamento e cache",
+      "export": "Exportação de conhecimento"
+    },
+    "labels": {
+      "uiLanguage": "Idioma da interface",
+      "provider": "Provedor",
+      "apiKey": "Chave API {{provider}}",
+      "chatModel": "Modelo específico",
+      "asrModel": "Modelo específico",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "Chave API ASR",
+      "cacheDays": "Validade do cache (dias)",
+      "notionToken": "Token do Notion",
+      "readwiseToken": "Token do Readwise",
+      "obsidianVault": "Caminho do Vault do Obsidian"
+    },
+    "placeholders": {
+      "chatApiKey": "Digite a chave API para {{provider}}",
+      "chatEndpoint": "ex. https://api.openai.com/v1",
+      "asrApiKey": "Digite a chave API para {{provider}}",
+      "asrEndpoint": "ex. https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/caminho/para/vault"
+    },
+    "languageHint": "Afeta sidebar / popup / configurações da interface, e o idioma das respostas da IA.",
+    "clearAllCache": "Limpar todo o cache",
+    "cacheCleared": "Limpo!",
+    "storageNote": "Todas as chaves são armazenadas localmente no navegador.",
+    "freeHint": {
+      "signup": "Página de cadastro:",
+      "keyPage": "Criar API Key:",
+      "usage": "Após criar, selecione o modelo correspondente na lista acima e cole a API Key no campo de entrada.",
+      "help": "Não sabe como se cadastrar ou criar a API Key? Pergunte a qualquer chatbot de IA para ser orientado passo a passo.",
+      "chatIntro": "Se você ainda não comprou nenhuma API Key de modelo de IA, recomendamos se cadastrar no Ollama. A plataforma permite registrar uma API Key gratuitamente e oferece aos usuários gratuitos uma cota generosa, suficiente para uso moderado.",
+      "asrIntro": "Se você ainda não comprou nenhuma API Key de modelo de IA, recomendamos se cadastrar no Groq. A plataforma permite registrar uma API Key gratuitamente e oferece aos usuários gratuitos uma cota generosa, suficiente para uso moderado."
+    },
+    "ollama": {
+      "loading": "Obtendo modelos disponíveis do Ollama Cloud...",
+      "fetchFailed": "Falha ao obter a lista de modelos do Ollama: {{error}}. Exibindo lista padrão."
+    },
+    "saveBtn": "Salvar todas as configurações"
+  }
+}

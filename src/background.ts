@@ -1,6 +1,20 @@
 export { }
 
+import { cacheService } from "./services/cache/CacheService"
+
 console.log("[VA] Background Service Worker Loaded")
+
+// Clean up expired cache entries on startup
+chrome.runtime.onInstalled.addListener(() => {
+    cacheService.clearExpired()
+})
+chrome.runtime.onStartup.addListener(() => {
+    cacheService.clearExpired()
+})
+
+// ─── YouTube subtitle interceptor ───
+// The interceptor is installed on-demand inside handleYouTubeSubtitles.
+// No need for tabs.onUpdated — the toggle approach is self-contained.
 
 // ─── In-memory cache for player JS cipher functions (per SW lifecycle) ───
 const playerJsCache = new Map<string, string>() // url → js text
@@ -8,6 +22,16 @@ const playerJsCache = new Map<string, string>() // url → js text
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "FETCH_API") {
         handleFetch(message, sendResponse)
+        return true
+    }
+
+    if (message.type === "CHECK_YOUTUBE_SUBTITLES_CACHE") {
+        const tabId = sender.tab?.id
+        if (!tabId) {
+            sendResponse({ success: false })
+            return true
+        }
+        checkYouTubeSubtitlesCache(message.videoId, tabId, sendResponse)
         return true
     }
 
@@ -30,97 +54,155 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handleYouTubeAudioUrl(message.videoId, tabId, sendResponse)
         return true
     }
+
+    if (message.type === "OPEN_OPTIONS_PAGE") {
+        chrome.runtime.openOptionsPage(() => {
+            const err = chrome.runtime.lastError
+            sendResponse({ success: !err, error: err?.message })
+        })
+        return true
+    }
 })
 
-// ─── YouTube Subtitles via scripting.executeScript in page main world ───
+// ─── Check if subtitle data was already captured (fast path) ───
+
+async function checkYouTubeSubtitlesCache(videoId: string, tabId: number, sendResponse: (r: any) => void) {
+    try {
+        const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            world: "MAIN",
+            func: (vid: string) => {
+                const cached = (window as any).__vaTimedText
+                if (cached?.videoId === vid && cached.body?.length > 100) {
+                    return { json3: cached.body }
+                }
+                return null
+            },
+            args: [videoId]
+        })
+        const json3 = results?.[0]?.result?.json3
+        if (json3) {
+            const segments = parseJson3Subtitles(json3)
+            sendResponse({ success: true, data: segments })
+        } else {
+            sendResponse({ success: false })
+        }
+    } catch (e) {
+        sendResponse({ success: false })
+    }
+}
+
+// ─── YouTube Subtitles: inject interceptor + toggle subtitles ───
+// The content script reads results via window.postMessage (from MAIN world).
 
 async function handleYouTubeSubtitles(videoId: string, tabId: number, sendResponse: (r: any) => void) {
     try {
-        console.log(`[VA-BG] Fetching subtitles for ${videoId} via page main world (tabId=${tabId})`)
+        console.log(`[VA-BG] Installing subtitle interceptor + toggle for ${videoId}`)
 
-        // Step 1: Read baseUrl from ytInitialPlayerResponse in MAIN world (no fetch here)
-        const urlResults = await chrome.scripting.executeScript({
+        await chrome.scripting.executeScript({
             target: { tabId },
             world: "MAIN",
-            func: (_vid: string) => {
-                try {
-                    const playerData = (window as any).ytInitialPlayerResponse
-                    if (!playerData) return { error: "ytInitialPlayerResponse not found on page" }
+            func: (vid: string) => {
+                // If already captured for this video, post immediately
+                const existing = (window as any).__vaTimedText
+                if (existing?.videoId === vid && existing.body?.length > 100) {
+                    window.postMessage({ type: "VA_TIMEDTEXT_RESULT", videoId: vid, body: existing.body }, "*")
+                    return
+                }
 
-                    const captions = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks
-                    if (!captions?.length) return { error: "No caption tracks in ytInitialPlayerResponse" }
+                // Install persistent interceptor (idempotent)
+                if (!(window as any).__vaInterceptorInstalled) {
+                    ;(window as any).__vaInterceptorInstalled = true
+                    ;(window as any).__vaTimedText = null
+                    const origOpen = XMLHttpRequest.prototype.open
+                    const origSend = XMLHttpRequest.prototype.send
+                    XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: any[]) {
+                        ;(this as any)._vaUrl = String(url)
+                        return origOpen.apply(this, [method, url, ...rest] as any)
+                    }
+                    XMLHttpRequest.prototype.send = function (...args: any[]) {
+                        const url: string = (this as any)._vaUrl || ""
+                        if (url.includes("/api/timedtext") && url.includes("v=")) {
+                            this.addEventListener("load", function () {
+                                if (this.responseText && this.responseText.length > 100) {
+                                    const m = url.match(/[?&]v=([^&]+)/)
+                                    ;(window as any).__vaTimedText = { videoId: m ? m[1] : "", body: this.responseText, timestamp: Date.now() }
+                                    window.postMessage({ type: "VA_TIMEDTEXT_RESULT", videoId: m ? m[1] : "", body: this.responseText }, "*")
+                                }
+                            })
+                        }
+                        return origSend.apply(this, args)
+                    }
+                }
 
-                    // Prefer manual CC (vssId not starting with "a.") over auto-generated
-                    const track = captions.find((t: any) => t.vssId && !t.vssId.startsWith("a."))
-                        || captions[0]
+                // Toggle subtitles to trigger the timedtext XHR.
+                // On first sidebar open, YouTube's caption module is lazy-loaded
+                // and toggleSubtitles() can be a no-op. Explicitly loadModule
+                // first and wait for the tracklist to appear before toggling.
+                const mp = document.getElementById("movie_player") as any
+                if (mp?.toggleSubtitles) {
+                    const doToggle = () => {
+                        const wasOn = mp.isSubtitlesOn?.()
+                        if (wasOn) {
+                            mp.toggleSubtitles()
+                            setTimeout(() => mp.toggleSubtitles(), 250)
+                        } else {
+                            mp.toggleSubtitles()
+                            setTimeout(() => { if (mp.isSubtitlesOn?.()) mp.toggleSubtitles() }, 4000)
+                        }
+                    }
 
-                    return { baseUrl: track.baseUrl, trackId: track.vssId }
-                } catch (e: any) {
-                    return { error: e.message }
+                    try { mp.loadModule?.("captions") } catch { }
+
+                    const tracklistReady = () => {
+                        try {
+                            const list = mp.getOption?.("captions", "tracklist")
+                            return Array.isArray(list) && list.length > 0
+                        } catch { return false }
+                    }
+
+                    if (tracklistReady()) {
+                        doToggle()
+                    } else {
+                        // Poll up to 4s; toggle as soon as the module reports a tracklist,
+                        // or unconditionally at the deadline to preserve old behavior.
+                        const deadline = Date.now() + 4000
+                        const iv = setInterval(() => {
+                            if (tracklistReady() || Date.now() >= deadline) {
+                                clearInterval(iv)
+                                doToggle()
+                            }
+                        }, 200)
+                    }
                 }
             },
             args: [videoId]
         })
 
-        const urlResult = urlResults?.[0]?.result
-        if (urlResult?.error) throw new Error(urlResult.error)
-        if (!urlResult?.baseUrl) throw new Error("No baseUrl returned from page")
-
-        console.log(`[VA-BG] Got baseUrl for track ${urlResult.trackId}, fetching from isolated world...`)
-
-        // Step 2: Fetch the subtitle XML from ISOLATED world (content script context)
-        const xmlResults = await chrome.scripting.executeScript({
-            target: { tabId },
-            world: "ISOLATED",
-            func: async (url: string) => {
-                try {
-                    const res = await fetch(url, { credentials: "include" })
-                    if (!res.ok) return { error: `HTTP ${res.status}` }
-                    const text = await res.text()
-                    return { xml: text }
-                } catch (e: any) {
-                    return { error: e.message }
-                }
-            },
-            args: [urlResult.baseUrl]
-        })
-
-        const result = { ...xmlResults?.[0]?.result, trackId: urlResult.trackId }
-        console.log(`[VA-BG] Page script result: error=${result?.error ?? "none"}, xmlLen=${result?.xml?.length ?? 0}, track=${result?.trackId}`)
-
-        if (result?.error) throw new Error(result.error)
-        if (!result?.xml) throw new Error("No XML data returned from page script")
-
-        const segments = parseSubtitleXml(result.xml)
-        console.log(`[VA-BG] Parsed ${segments.length} subtitle segments`)
-
-        if (segments.length === 0) {
-            throw new Error(`Parsed 0 segments from XML (length: ${result.xml.length}), preview: ${result.xml.substring(0, 100)}`)
-        }
-
-        sendResponse({ success: true, data: segments })
+        // Respond immediately — the content script will receive the actual
+        // subtitle data via window.postMessage from the MAIN world interceptor.
+        sendResponse({ success: true, triggered: true })
     } catch (error) {
         console.error(`[VA-BG] handleYouTubeSubtitles error:`, error)
         sendResponse({ success: false, error: (error as Error).message })
     }
 }
 
-function parseSubtitleXml(xml: string): any[] {
+/** Parse YouTube json3 timedtext format into SubtitleSegment[]. */
+function parseJson3Subtitles(raw: string): any[] {
+    const data = JSON.parse(raw)
+    const events: any[] = data.events || []
     const segments: any[] = []
-    const regex = /<(?:text|p)[^>]*\bstart="([\d.]+)"[^>]*\bdur="([\d.]+)"[^>]*>([\s\S]*?)<\/(?:text|p)>/g
-    let m
-    while ((m = regex.exec(xml)) !== null) {
-        const text = m[3].replace(/<[^>]+>/g, "")
-            .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-            .replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim()
-        if (text) {
-            segments.push({
-                start: parseFloat(m[1]),
-                end: parseFloat(m[1]) + parseFloat(m[2]),
-                text
-            })
-        }
+
+    for (const ev of events) {
+        if (!ev.segs || ev.segs.length === 0) continue
+        const text = ev.segs.map((s: any) => s.utf8 ?? "").join("").trim()
+        if (!text) continue
+        const start = Math.round((ev.tStartMs || 0) / 10) / 100
+        const end = Math.round(((ev.tStartMs || 0) + (ev.dDurationMs || 0)) / 10) / 100
+        segments.push({ start, end, text })
     }
+
     return segments
 }
 

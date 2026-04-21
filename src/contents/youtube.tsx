@@ -5,6 +5,7 @@ import cssText from "data-text:~style.css"
 import { YouTubeService } from "../services/platform/youtube/YouTubeService"
 import { Sidebar } from "../components/Sidebar"
 import { ToggleButton } from "../components/ToggleButton"
+import { I18nProvider } from "../i18n/I18nProvider"
 
 export const config: PlasmoCSConfig = {
     matches: ["https://www.youtube.com/watch*"],
@@ -61,10 +62,12 @@ const YouTubeCS = () => {
     }, [])
 
     return (
-        <div className={isDark ? "dark" : ""} style={{ pointerEvents: "auto" }}>
-            <ToggleButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
-            <Sidebar service={service} isOpen={isOpen} onClose={() => setIsOpen(false)} />
-        </div>
+        <I18nProvider>
+            <div className={isDark ? "dark" : ""} style={{ pointerEvents: "auto" }}>
+                <ToggleButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
+                <Sidebar service={service} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+            </div>
+        </I18nProvider>
     )
 }
 

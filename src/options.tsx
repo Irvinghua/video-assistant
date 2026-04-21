@@ -1,22 +1,95 @@
 import { useEffect, useState } from "react"
 import { Storage } from "@plasmohq/storage"
-import { Trash2, Save, CheckCircle, ExternalLink } from "lucide-react"
+import { Trash2, Save, CheckCircle } from "lucide-react"
 import { cacheService } from "./services/cache/CacheService"
+import { I18nProvider } from "./i18n/I18nProvider"
+import { useTranslation } from "./i18n/useTranslation"
+import { LanguageSwitcher } from "./components/LanguageSwitcher"
 
 import "./style.css"
 
 const storage = new Storage()
 
-const MODEL_OPTIONS = [
-    { value: "Gemini", label: "Gemini", placeholder: "Enter Gemini API Key" },
-    { value: "ChatGPT", label: "ChatGPT (OpenAI)", placeholder: "Enter OpenAI API Key" },
-    { value: "Claude", label: "Claude (Anthropic)", placeholder: "Enter Anthropic API Key" },
-    { value: "Grok", label: "Grok (xAI)", placeholder: "Enter xAI API Key" },
-    { value: "Qwen", label: "Qwen (通义千问)", placeholder: "Enter Qwen API Key" },
-    { value: "GLM", label: "GLM (智谱)", placeholder: "Enter GLM API Key" },
-    { value: "Kimi", label: "Kimi (月之暗面)", placeholder: "Enter Kimi API Key" },
-    { value: "DeepSeek", label: "DeepSeek", placeholder: "Enter DeepSeek API Key" }
-]
+const Z_AI_URL_INTL = "https://api.z.ai/api/paas/v4"
+const Z_AI_URL_CN = "https://open.bigmodel.cn/api/paas/v4"
+
+const CHAT_CONFIGS = {
+    "OpenAI": {
+        models: ["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4-turbo", "o1", "o1-mini", "o3-mini"],
+        defaultUrl: "https://api.openai.com/v1"
+    },
+    "Anthropic": {
+        models: [
+            "claude-opus-4-7",
+            "claude-sonnet-4-6",
+            "claude-haiku-4-5",
+            "claude-opus-4-1",
+            "claude-3-7-sonnet-latest",
+            "claude-3-5-sonnet-latest",
+            "claude-3-5-haiku-latest"
+        ],
+        defaultUrl: "https://api.anthropic.com/v1"
+    },
+    "Gemini": {
+        models: ["gemini-3.1-pro", "gemini-3.1-flash-lite", "gemini-3-flash"],
+        defaultUrl: "https://generativelanguage.googleapis.com/v1beta"
+    },
+    "Grok": {
+        models: ["grok-4.20-reasoning", "grok-4-fast"],
+        defaultUrl: "https://api.x.ai/v1"
+    },
+    "Qwen": {
+        models: ["qwen3.6-plus", "qwen3.5-plus", "qwen2.5"],
+        defaultUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    },
+    "Z.AI": {
+        models: ["glm-5.1", "glm-5", "glm-4.7"],
+        defaultUrl: Z_AI_URL_INTL
+    },
+    "MiniMax": {
+        models: ["MiniMax-2.5", "MiniMax-M2.7"],
+        defaultUrl: "https://api.minimax.io/v1"
+    },
+    "DeepSeek": {
+        models: ["deepseek-v3", "deepseek-r2"],
+        defaultUrl: "https://api.deepseek.com"
+    },
+    "Ollama Cloud": {
+        models: [
+            "gemini-3-flash-preview",
+            "gemma4",
+            "glm-4.7",
+            "glm-5",
+            "glm-5.1",
+            "qwen3.5"
+        ],
+        defaultUrl: "https://ollama.com/api/chat"
+    }
+}
+
+const OLLAMA_PREFIXES = ["glm", "qwen", "gemma", "gemini"] as const
+
+async function fetchOllamaModels(): Promise<string[]> {
+    const resp = await chrome.runtime.sendMessage({
+        type: "FETCH_API",
+        url: "https://ollama.com/api/tags",
+        options: { method: "GET" }
+    })
+    if (!resp?.success) throw new Error(resp?.error || "network error")
+    const models: any[] = resp.data?.models || []
+    return models
+        .map((m: any) => (typeof m?.name === "string" ? m.name : null))
+        .filter((n): n is string => n !== null)
+        .filter((n) => OLLAMA_PREFIXES.some((p) => n.toLowerCase().startsWith(p)))
+        .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+}
+
+function resolveChatDefaultUrl(provider: string, locale: string): string {
+    if (provider === "Z.AI") {
+        return locale === "zh-CN" ? Z_AI_URL_CN : Z_AI_URL_INTL
+    }
+    return CHAT_CONFIGS[provider as keyof typeof CHAT_CONFIGS]?.defaultUrl ?? ""
+}
 
 const ASR_CONFIGS = {
     "OpenAI": {
@@ -42,10 +115,15 @@ const ASR_CONFIGS = {
 }
 
 function OptionsIndex() {
-    const [selectedModel, setSelectedModel] = useState("Gemini")
-    const [apiKeys, setApiKeys] = useState<Record<string, string>>({})
-    
-    // ASR States
+    const { t, locale } = useTranslation()
+    const [chatProvider, setChatProvider] = useState("OpenAI")
+    const [chatModel, setChatModel] = useState(CHAT_CONFIGS.OpenAI.models[0])
+    const [chatApiUrl, setChatApiUrl] = useState(CHAT_CONFIGS.OpenAI.defaultUrl)
+    const [chatApiKey, setChatApiKey] = useState("")
+    const [ollamaModels, setOllamaModels] = useState<string[]>(CHAT_CONFIGS["Ollama Cloud"].models)
+    const [ollamaLoading, setOllamaLoading] = useState(false)
+    const [ollamaError, setOllamaError] = useState("")
+
     const [asrProvider, setAsrProvider] = useState("OpenAI")
     const [asrModel, setAsrModel] = useState("whisper-1")
     const [asrApiUrl, setAsrApiUrl] = useState("https://api.openai.com/v1")
@@ -62,22 +140,54 @@ function OptionsIndex() {
         loadSettings()
     }, [])
 
+    useEffect(() => {
+        if (chatProvider !== "Ollama Cloud") {
+            setOllamaError("")
+            setOllamaLoading(false)
+            return
+        }
+        let cancelled = false
+        setOllamaLoading(true)
+        setOllamaError("")
+        fetchOllamaModels()
+            .then((list) => {
+                if (cancelled) return
+                if (list.length > 0) {
+                    setOllamaModels(list)
+                    setChatModel((prev) => (list.includes(prev) ? prev : list[0]))
+                }
+            })
+            .catch((e) => {
+                if (!cancelled) setOllamaError(e?.message || "fetch failed")
+            })
+            .finally(() => {
+                if (!cancelled) setOllamaLoading(false)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [chatProvider])
+
     const loadSettings = async () => {
-        const model = await storage.get("selectedModel") || "Gemini"
-        const keys = await storage.get("apiKeys") || {}
-        
+        const cProvider = await storage.get("chatProvider") || "OpenAI"
+        const cModel = await storage.get("chatModel") || CHAT_CONFIGS[cProvider as keyof typeof CHAT_CONFIGS]?.models[0] || ""
+        const cUrl = await storage.get("chatApiUrl") || resolveChatDefaultUrl(cProvider, locale)
+        const cKey = await storage.get("chatApiKey") || ""
+
         const provider = await storage.get("asrProvider") || "OpenAI"
         const amodel = await storage.get("asrModel") || "whisper-1"
         const asrUrl = await storage.get("asrApiUrl") || "https://api.openai.com/v1"
         const asrKey = await storage.get("asrApiKey") || ""
-        
+
         const days = await storage.get("cacheDays") || 3
         const notion = await storage.get("notionToken") || ""
         const readwise = await storage.get("readwiseToken") || ""
         const obsidian = await storage.get("obsidianVault") || ""
 
-        setSelectedModel(model)
-        setApiKeys(keys)
+        setChatProvider(cProvider)
+        setChatModel(cModel)
+        setChatApiUrl(cUrl)
+        setChatApiKey(cKey)
         setAsrProvider(provider)
         setAsrModel(amodel)
         setAsrApiUrl(asrUrl)
@@ -89,8 +199,10 @@ function OptionsIndex() {
     }
 
     const handleSave = async () => {
-        await storage.set("selectedModel", selectedModel)
-        await storage.set("apiKeys", apiKeys)
+        await storage.set("chatProvider", chatProvider)
+        await storage.set("chatModel", chatModel)
+        await storage.set("chatApiUrl", chatApiUrl)
+        await storage.set("chatApiKey", chatApiKey)
         await storage.set("asrProvider", asrProvider)
         await storage.set("asrModel", asrModel)
         await storage.set("asrApiUrl", asrApiUrl)
@@ -99,8 +211,17 @@ function OptionsIndex() {
         await storage.set("notionToken", notionToken)
         await storage.set("readwiseToken", readwiseToken)
         await storage.set("obsidianVault", obsidianVault)
-        setStatus("Settings saved!")
+        setStatus(t("options.savedToast"))
         setTimeout(() => setStatus(""), 2000)
+    }
+
+    const handleChatProviderChange = (provider: string) => {
+        setChatProvider(provider)
+        const config = CHAT_CONFIGS[provider as keyof typeof CHAT_CONFIGS]
+        if (config) {
+            setChatModel(config.models[0])
+            setChatApiUrl(resolveChatDefaultUrl(provider, locale))
+        }
     }
 
     const handleAsrProviderChange = (provider: string) => {
@@ -117,23 +238,15 @@ function OptionsIndex() {
         setAsrModel(model)
     }
 
-    const handleKeyChange = (provider: string, value: string) => {
-        setApiKeys(prev => ({ ...prev, [provider]: value }))
-    }
-
     const handleClearCache = async () => {
         try {
             await cacheService.clearAll()
-            // Force clear storage object just in case
-            await chrome.storage.local.clear()
             setCacheCleared(true)
             setTimeout(() => setCacheCleared(false), 2000)
         } catch (e) {
             console.error("Failed to clear cache", e)
         }
     }
-
-    const currentModel = MODEL_OPTIONS.find(m => m.value === selectedModel) || MODEL_OPTIONS[0]
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 text-gray-900 dark:text-gray-100 font-sans">
@@ -142,41 +255,108 @@ function OptionsIndex() {
                     <div className="bg-blue-600 p-2 rounded-lg">
                         <Save className="text-white" size={24} />
                     </div>
-                    <h1 className="text-2xl font-extrabold tracking-tight">Configuration</h1>
+                    <h1 className="text-2xl font-extrabold tracking-tight">{t("options.title")}</h1>
                 </div>
 
-                {/* ====== Section 1: AI Model Settings ====== */}
+                {/* ====== Section 0: Language ====== */}
+                <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                        <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 p-1.5 rounded-md">🌐</span>
+                        {t("options.sections.language")}
+                    </h2>
+                    <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                        {t("options.labels.uiLanguage")}
+                    </label>
+                    <LanguageSwitcher variant="full" />
+                    <p className="text-xs text-gray-500 mt-2">{t("options.languageHint")}</p>
+                </section>
+
+                {/* ====== Section 1: Summary & Chat Model ====== */}
                 <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 p-1.5 rounded-md">🤖</span>
-                        Summary & Chat Model
+                        {t("options.sections.aiModel")}
                     </h2>
 
-                    <div className="grid gap-5">
-                        <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Default Model Provider</label>
-                            <select
-                                value={selectedModel}
-                                onChange={(e) => setSelectedModel(e.target.value)}
-                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
-                            >
-                                {MODEL_OPTIONS.map(m => (
-                                    <option key={m.value} value={m.value}>{m.label}</option>
-                                ))}
-                            </select>
+                    <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+                        {t("options.sections.aiModelDesc")}
+                    </p>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.provider")}</label>
+                                <select
+                                    value={chatProvider}
+                                    onChange={(e) => handleChatProviderChange(e.target.value)}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                >
+                                    {Object.keys(CHAT_CONFIGS).map(p => (
+                                        <option key={p} value={p}>{p}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.chatModel")}</label>
+                                <select
+                                    value={chatModel}
+                                    onChange={(e) => setChatModel(e.target.value)}
+                                    disabled={chatProvider === "Ollama Cloud" && ollamaLoading}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60"
+                                >
+                                    {(chatProvider === "Ollama Cloud"
+                                        ? ollamaModels
+                                        : CHAT_CONFIGS[chatProvider as keyof typeof CHAT_CONFIGS]?.models || []
+                                    ).map(m => (
+                                        <option key={m} value={m}>{m}</option>
+                                    ))}
+                                </select>
+                                {chatProvider === "Ollama Cloud" && ollamaLoading && (
+                                    <p className="text-xs text-gray-500 mt-1">{t("options.ollama.loading")}</p>
+                                )}
+                                {chatProvider === "Ollama Cloud" && ollamaError && (
+                                    <p className="text-xs text-red-500 mt-1">{t("options.ollama.fetchFailed", { error: ollamaError })}</p>
+                                )}
+                            </div>
                         </div>
 
                         <div>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.apiEndpoint")}</label>
+                            <input
+                                type="text"
+                                value={chatApiUrl}
+                                onChange={(e) => setChatApiUrl(e.target.value)}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                placeholder={t("options.placeholders.chatEndpoint")}
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
-                                {currentModel.label} API Key
+                                {t("options.labels.apiKey", { provider: chatProvider })}
                             </label>
                             <input
                                 type="password"
-                                value={apiKeys[selectedModel] || ""}
-                                onChange={(e) => handleKeyChange(selectedModel, e.target.value)}
+                                value={chatApiKey}
+                                onChange={(e) => setChatApiKey(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                placeholder={currentModel.placeholder}
+                                placeholder={t("options.placeholders.chatApiKey", { provider: chatProvider })}
                             />
+                        </div>
+
+                        <div className="mt-2 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
+                            <p>{t("options.freeHint.chatIntro")}</p>
+                            <div className="space-y-1">
+                                <p>
+                                    <span className="font-semibold">{t("options.freeHint.signup")}</span>{" "}
+                                    <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">https://ollama.com/</a>
+                                </p>
+                                <p>
+                                    <span className="font-semibold">{t("options.freeHint.keyPage")}</span>{" "}
+                                    <a href="https://ollama.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">https://ollama.com/settings/keys</a>
+                                </p>
+                            </div>
+                            <p>{t("options.freeHint.usage")}</p>
+                            <p className="italic text-gray-500 dark:text-gray-400">{t("options.freeHint.help")}</p>
                         </div>
                     </div>
                 </section>
@@ -185,17 +365,17 @@ function OptionsIndex() {
                 <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 p-1.5 rounded-md">🎙️</span>
-                        Remote ASR
+                        {t("options.sections.asr")}
                     </h2>
-                    
+
                     <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                        Used for videos without official subtitles. Digital audio is extracted and sent to this API for transcription.
+                        {t("options.sections.asrDesc")}
                     </p>
 
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Default Model Provider</label>
+                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.provider")}</label>
                                 <select
                                     value={asrProvider}
                                     onChange={(e) => handleAsrProviderChange(e.target.value)}
@@ -207,7 +387,7 @@ function OptionsIndex() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Specify Model</label>
+                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.asrModel")}</label>
                                 <select
                                     value={asrModel}
                                     onChange={(e) => handleAsrModelChange(e.target.value)}
@@ -221,24 +401,40 @@ function OptionsIndex() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">API Endpoint URL</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.apiEndpoint")}</label>
                             <input
                                 type="text"
                                 value={asrApiUrl}
                                 onChange={(e) => setAsrApiUrl(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                placeholder="e.g. https://api.openai.com/v1"
+                                placeholder={t("options.placeholders.asrEndpoint")}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">ASR API Key</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.asrApiKey")}</label>
                             <input
                                 type="password"
                                 value={asrApiKey}
                                 onChange={(e) => setAsrApiKey(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                placeholder={`Enter API Key for ${asrProvider}`}
+                                placeholder={t("options.placeholders.asrApiKey", { provider: asrProvider })}
                             />
+                        </div>
+
+                        <div className="mt-2 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
+                            <p>{t("options.freeHint.asrIntro")}</p>
+                            <div className="space-y-1">
+                                <p>
+                                    <span className="font-semibold">{t("options.freeHint.signup")}</span>{" "}
+                                    <a href="https://console.groq.com/home" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">https://console.groq.com/home</a>
+                                </p>
+                                <p>
+                                    <span className="font-semibold">{t("options.freeHint.keyPage")}</span>{" "}
+                                    <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">https://console.groq.com/keys</a>
+                                </p>
+                            </div>
+                            <p>{t("options.freeHint.usage")}</p>
+                            <p className="italic text-gray-500 dark:text-gray-400">{t("options.freeHint.help")}</p>
                         </div>
                     </div>
                 </section>
@@ -247,12 +443,12 @@ function OptionsIndex() {
                 <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <span className="bg-green-100 dark:bg-green-900/30 text-green-600 p-1.5 rounded-md">💾</span>
-                        Storage & Cache
+                        {t("options.sections.cache")}
                     </h2>
 
                     <div className="flex items-end gap-4 mb-6">
                         <div className="flex-1">
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Cache Validity (Days)</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.cacheDays")}</label>
                             <input
                                 type="number"
                                 min={1}
@@ -267,7 +463,7 @@ function OptionsIndex() {
                             className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-all text-sm font-bold dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400"
                         >
                             {cacheCleared ? <CheckCircle size={16} /> : <Trash2 size={16} />}
-                            {cacheCleared ? "Cleared!" : "Clear All Cache"}
+                            {cacheCleared ? t("options.cacheCleared") : t("options.clearAllCache")}
                         </button>
                     </div>
                 </section>
@@ -276,23 +472,23 @@ function OptionsIndex() {
                 <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 p-1.5 rounded-md">📤</span>
-                        Knowledge Export
+                        {t("options.sections.export")}
                     </h2>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Notion Token</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionToken")}</label>
                             <input
                                 type="password"
                                 value={notionToken}
                                 onChange={(e) => setNotionToken(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="secret_..."
+                                placeholder={t("options.placeholders.notionToken")}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Readwise Token</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.readwiseToken")}</label>
                             <input
                                 type="password"
                                 value={readwiseToken}
@@ -302,13 +498,13 @@ function OptionsIndex() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Obsidian Vault Path</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianVault")}</label>
                             <input
                                 type="text"
                                 value={obsidianVault}
                                 onChange={(e) => setObsidianVault(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="/path/to/vault"
+                                placeholder={t("options.placeholders.obsidianVault")}
                             />
                         </div>
                     </div>
@@ -316,19 +512,19 @@ function OptionsIndex() {
 
                 <div className="flex items-center justify-between pt-4">
                     <div className="text-sm text-gray-400 italic">
-                        All keys are stored locally in your browser.
+                        {t("options.storageNote")}
                     </div>
                     <button
                         onClick={handleSave}
                         className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-200 dark:shadow-none"
                     >
                         <Save size={18} />
-                        Save All Settings
+                        {t("options.saveBtn")}
                     </button>
                 </div>
 
                 {status && (
-                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-gray-900 text-white rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 font-medium">
+                    <div className="fixed bottom-8 start-1/2 -translate-x-1/2 px-6 py-3 bg-gray-900 text-white rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 font-medium">
                         <CheckCircle size={18} className="text-green-400" />
                         {status}
                     </div>
@@ -338,4 +534,12 @@ function OptionsIndex() {
     )
 }
 
-export default OptionsIndex
+function OptionsPage() {
+    return (
+        <I18nProvider>
+            <OptionsIndex />
+        </I18nProvider>
+    )
+}
+
+export default OptionsPage

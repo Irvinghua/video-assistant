@@ -13,6 +13,8 @@
 5. [状态管理与缓存](#5-状态管理与缓存)
 6. [跨域通信机制](#6-跨域通信机制)
 7. [构建与打包](#7-构建与打包)
+8. [调试方案](#8-调试方案)
+9. [国际化（i18n）](#9-国际化i18n)
 
 ---
 
@@ -101,8 +103,16 @@ src/
 │   ├── youtube.tsx                  # YouTube 内容脚本
 │   └── bilibili.tsx                 # Bilibili 内容脚本
 │
+├── i18n/
+│   ├── index.ts                    # 语言常量、检测、normalize、RTL 判断
+│   ├── I18nProvider.tsx            # React Context Provider，跨上下文同步语言
+│   ├── useTranslation.ts           # 简化 hook：返回 { t, locale, dir }
+│   └── locales/                    # 10 份字典：en / zh-CN / hi / es / ar / fr / pt / id / ja / ko
+│       └── *.json
+│
 ├── components/
 │   ├── ToggleButton.tsx             # 浮动开关按钮（右下角）
+│   ├── LanguageSwitcher.tsx         # 语言切换器（compact 用于侧边栏，full 用于设置页）
 │   └── Sidebar/
 │       ├── index.tsx                # 侧边栏主体：Tab 导航 + VideoProvider
 │       ├── SummaryPanel.tsx         # 视频摘要面板
@@ -278,6 +288,12 @@ YouTube 不提供公开的字幕 API，采用两步方案：
 | ChatGPT / Grok / Qwen / GLM / Kimi / DeepSeek | `OpenAIService` | OpenAI-compatible |
 | Claude | `ClaudeService` | Anthropic API（system 消息分离） |
 | Gemini | `GeminiService` | Google Gemini API（消息格式转换） |
+
+---
+
+### 4.9 国际化（i18n）
+
+UI 与 AI 输出均跟随同一份用户语言设置流转，详见 [§9 国际化（i18n）](#9-国际化i18n)。
 
 ---
 
@@ -520,5 +536,104 @@ if (process.env.NODE_ENV !== "production") {
 
 ---
 
+---
+
+## 9. 国际化（i18n）
+
+### 9.1 设计目标
+
+| 目标 | 实现 |
+|---|---|
+| 支持 10 种 UI 语言 | `src/i18n/locales/*.json`：en / zh-CN / hi / es / ar / fr / pt / id / ja / ko |
+| 首次安装自动选语言 | `detectBrowserLocale()` 读取 `navigator.languages`，loose match 后回退英文 |
+| 全表面同步切换 | `@plasmohq/storage` 的 `useStorage` 触发 `chrome.storage.onChanged`，sidebar / popup / options 立即重新渲染 |
+| AI 输出跟随 UI 语言 | `AI_LANGUAGE_NAMES[locale]` 提供英文形态的语言名（"Modern Standard Arabic"），注入 prompt |
+| 阿拉伯语 RTL | `RTL_LOCALES` + `<div dir={dir} lang={locale}>` + Tailwind logical 属性 |
+| 不打扰旧缓存 | 已生成内容仍按原语言显示；用户主动清缓存后再生成才换语言 |
+
+### 9.2 模块结构
+
+```
+src/i18n/
+├── index.ts            # SUPPORTED_LOCALES / LANGUAGE_DISPLAY_NAMES (本地名 → 下拉显示)
+│                       # AI_LANGUAGE_NAMES (英文名 → 注入 AI prompt)
+│                       # detectBrowserLocale / normalizeLocale / isRTL / getDirection
+│                       # LOCALE_STORAGE_KEY = "userLanguage"
+├── I18nProvider.tsx    # Context Provider，提供 { locale, setLocale, t, dir, aiLanguage }
+├── useTranslation.ts   # 简化 hook，只返回 { t, locale, dir }
+└── locales/<locale>.json
+```
+
+### 9.3 调用链
+
+```
+浏览器语言 / 用户切换
+   │
+   ▼
+useStorage("userLanguage") ── (chrome.storage.local) ──► 跨上下文广播
+   │
+   ▼
+I18nProvider 计算 locale + dir + aiLanguage
+   │
+   ├─► UI：useTranslation().t("summary.title") → 字符串渲染
+   ├─► 布局：<div dir="rtl" lang="ar"> 包裹整棵子树
+   └─► AI：useI18n().aiLanguage → 透传到 hooks
+            ├─► useSummary    → VideoSummarizer.summarize(subs, aiLanguage)
+            │                    → Prompts.chunkSummary / finalSummary(text, language)
+            ├─► useCommentAnalysis → CommentAnalyzer.analyze(sampled, script, aiLanguage)
+            │                         → IAIService.analyzeComments(..., language)
+            │                           → Prompts.analyzeComments(..., language)
+            ├─► useMindMap    → Prompts.mindmapChunkSummary / mindmap(text, aiLanguage)
+            └─► AskAIPanel    → context += "Respond in {aiLanguage}."
+```
+
+### 9.4 Provider 挂载点
+
+| 入口 | 文件 | 备注 |
+|---|---|---|
+| Popup | `src/popup.tsx` | 顶层包裹 `<I18nProvider>` |
+| Options | `src/options.tsx` | 顶层 `OptionsPage` 包裹 `<I18nProvider>` |
+| YouTube content | `src/contents/youtube.tsx` | Shadow DOM 内层包裹 |
+| Bilibili content | `src/contents/bilibili.tsx` | 同上 |
+
+### 9.5 Locale 检测与归一化
+
+`normalizeLocale(input)` 处理 BCP-47 简化匹配：
+
+```
+"zh-Hant-HK" → "zh-CN"   // 所有 zh-* 当前都归一到 zh-CN（产品级简化）
+"pt-BR"      → "pt"      // 葡语合并
+"ar-EG"      → "ar"      // 阿语合并
+"fr-CA"      → "fr"
+"en-US"      → "en"
+"th"         → null      // 不支持，回退英文
+```
+
+`detectBrowserLocale()`：按 `navigator.languages` 顺序遍历，命中第一个支持项即返回，全部不命中则 `"en"`。
+
+### 9.6 LanguageSwitcher 两种形态
+
+| variant | 用途 | 视觉 |
+|---|---|---|
+| `compact` | 侧边栏 header | 地球图标 + locale code（如 `EN`/`中文`/`عربية`），点击弹出列表 |
+| `full` | 设置页「语言」区块 | 原生 `<select>`，选项展示原生名称（English / 简体中文 / 日本語 / ...） |
+
+### 9.7 RTL 支持
+
+- `RTL_LOCALES = new Set(["ar"])`
+- 所有侧边栏组件已替换为 logical CSS：`ms-`/`me-`、`ps-`/`pe-`、`border-s-`/`border-e-`
+- 切换到阿拉伯语时整棵子树 `dir="rtl"`，Tailwind 自动镜像
+
+### 9.8 添加新语言的步骤
+
+1. `src/i18n/index.ts`：在 `SUPPORTED_LOCALES`、`LANGUAGE_DISPLAY_NAMES`、`AI_LANGUAGE_NAMES` 各加一项；如为 RTL，加入 `RTL_LOCALES`。
+2. `src/i18n/locales/<locale>.json`：复制 `en.json` 全文翻译，保持 `{{count}} / {{id}} / {{provider}}` 等插值变量原样。
+3. `I18nProvider.tsx`：在文件顶部 import 新字典并加入 `DICTIONARIES`。
+4. （可选）若 `normalizeLocale` 需要新的 loose-match 规则，同步补全。
+5. 重新加载插件即可——无需改动任何 UI 组件。
+
+---
+
 *文档生成时间：2026-04-13*
 *调试章节更新：2026-04-14*
+*i18n 章节添加：2026-04-17*

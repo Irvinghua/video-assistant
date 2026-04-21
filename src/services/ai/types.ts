@@ -45,7 +45,7 @@ export interface IAIService {
     /**
      * Analyze comments for clustering and sentiment
      */
-    analyzeComments(videoOverview: string, samplesJson: string): Promise<CommentAnalysis>
+    analyzeComments(videoScript: string, samplesJson: string, language?: string): Promise<CommentAnalysis>
 
     /**
      * Chat with context

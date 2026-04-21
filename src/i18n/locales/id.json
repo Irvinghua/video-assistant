@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "error": "Galat",
+    "close": "Tutup"
+  },
+  "popup": {
+    "title": "Asisten Video AI",
+    "description": "Buka video Bilibili atau YouTube untuk menggunakan asisten.",
+    "openSettings": "Buka Pengaturan"
+  },
+  "toggleButton": {
+    "open": "Buka Asisten Video AI"
+  },
+  "sidebar": {
+    "defaultTitle": "Asisten Video",
+    "tabs": {
+      "summary": "Ringkasan",
+      "comments": "Komentar",
+      "askAI": "Tanya AI",
+      "mindmap": "Peta Pikiran"
+    },
+    "languageSwitcher": {
+      "tooltip": "Ubah bahasa antarmuka"
+    }
+  },
+  "summary": {
+    "analyzing": "AI sedang menganalisis...",
+    "asrNote": "Mengekstrak audio digital. Mohon tunggu.",
+    "title": "Ringkasan",
+    "videoIdCached": "ID Video: {{id}} | Tercache",
+    "clearCache": "Hapus cache",
+    "clearCacheTooltip": "Hapus cache video ini",
+    "cacheClearedToast": "Cache dihapus.",
+    "export": "Ekspor",
+    "sections": {
+      "digest": "Ringkas",
+      "keyPoints": "Poin Penting"
+    },
+    "detecting": "Mendeteksi konten video...",
+    "detectingDesc": "Mengambil info subtitle video",
+    "noSubtitles": "Subtitle tidak ditemukan",
+    "noSubtitlesDesc": "Ekstrak audio digital dan gunakan AI?",
+    "summarizeViaAsr": "Ringkas melalui ASR",
+    "subtitlesAvailable": "Subtitle tersedia",
+    "subtitlesAvailableDesc": "Ditemukan {{count}} baris untuk {{id}}.",
+    "generateNow": "Buat ringkasan sekarang",
+    "subtitlePreview": "PRATINJAU SUBTITLE",
+    "andMoreLines": "... dan {{count}} baris lagi",
+    "errors": {
+      "noContent": "Tidak ada konten untuk diringkas.",
+      "noAudio": "Video ini tidak mendukung ekstraksi audio.",
+      "transcriptionEmpty": "Hasil transkripsi kosong."
+    }
+  },
+  "asr": {
+    "step": {
+      "getting_url": "MENGAMBIL URL",
+      "downloading": "MENGUNDUH",
+      "transcribing": "MENTRANSKRIPSI",
+      "summarizing": "MERINGKAS",
+      "generating": "MEMBUAT"
+    }
+  },
+  "comments": {
+    "fetching": "Mengambil komentar...",
+    "sampledStats": "{{total}} komentar disampel (Konsensus {{consensus}} + Kontroversi {{controversial}}).",
+    "analysisHint": "Analisis menggabungkan ringkasan video untuk menghasilkan konsensus / divergensi / gap / suasana.",
+    "analyzeBtn": "Analisis Komentar",
+    "analyzing": "Menganalisis komentar...",
+    "reportTitle": "📊 Laporan Opini Publik",
+    "sections": {
+      "consensus": "🤝 Konsensus Inti",
+      "divergences": "⚡ Divergensi Utama",
+      "gap": "🔍 Video vs Komentar (Gap)",
+      "spotlight": "💡 Wawasan Menonjol"
+    },
+    "heatLabel": "Intensitas: {{level}}",
+    "heat": {
+      "extreme": "Ekstrem",
+      "high": "Tinggi",
+      "medium": "Sedang"
+    },
+    "noConsensus": "Tidak ada konsensus yang jelas terdeteksi.",
+    "noDivergence": "Tidak ada divergensi mencolok terdeteksi.",
+    "sideA": "Pihak A:",
+    "sideB": "Pihak B:",
+    "rootCause": "Akar penyebab:",
+    "hit": "TEPAT SASARAN",
+    "miss": "MELESET / MELUAS",
+    "errors": {
+      "noComments": "Tidak ada komentar untuk dianalisis.",
+      "needSubtitle": "Mohon ambil subtitle video terlebih dahulu (Ringkas atau Ringkas via ASR) sebelum menganalisis komentar."
+    }
+  },
+  "askAI": {
+    "emptyTitle": "Tanyakan apa pun tentang video!",
+    "emptyDesc": "Konteks mencakup subtitle dan ringkasan.",
+    "inputPlaceholder": "Ajukan pertanyaan...",
+    "errorPrefix": "Galat: "
+  },
+  "mindmap": {
+    "generating": "AI sedang membuat peta pikiran...",
+    "preparing": "Menyiapkan peta pikiran...",
+    "linesAvailable": "{{count}} baris tersedia",
+    "errors": {
+      "noAudio": "Video ini tidak mendukung ekstraksi digital."
+    }
+  },
+  "configure": {
+    "chat": {
+      "title": "Model Chat Belum Dikonfigurasi",
+      "button": "Konfigurasi Model Chat",
+      "desc": "Klik tombol di atas untuk membuka Pengaturan dan masukkan API Key untuk model Ringkasan & Chat. Tanpa ini ekstensi tidak bisa meringkas video, menganalisis komentar, menjawab pertanyaan, atau membuat mind map."
+    },
+    "asr": {
+      "title": "Transkripsi Suara Belum Dikonfigurasi",
+      "button": "Konfigurasi Penyedia ASR",
+      "desc": "Video ini tidak memiliki teks. Klik tombol di atas untuk membuka Pengaturan dan tambahkan API Key ASR; setelahnya ekstensi akan mentranskripsi audionya untuk Anda."
+    }
+  },
+  "options": {
+    "title": "Pengaturan",
+    "savedToast": "Pengaturan disimpan!",
+    "sections": {
+      "language": "Bahasa",
+      "aiModel": "Model Ringkasan & Chat",
+      "aiModelDesc": "Digunakan untuk ringkasan video, analisis komentar, Ask AI, dan pembuatan mind map. Pilih penyedia dan masukkan API Key milik Anda.",
+      "asr": "ASR Remote",
+      "asrDesc": "Digunakan untuk video tanpa subtitle resmi. Audio digital diekstrak dan dikirim ke API ini untuk transkripsi.",
+      "cache": "Penyimpanan & Cache",
+      "export": "Ekspor Pengetahuan"
+    },
+    "labels": {
+      "uiLanguage": "Bahasa antarmuka",
+      "provider": "Penyedia",
+      "apiKey": "API Key {{provider}}",
+      "chatModel": "Model spesifik",
+      "asrModel": "Model spesifik",
+      "apiEndpoint": "BASE URL",
+      "asrApiKey": "API Key ASR",
+      "cacheDays": "Masa berlaku cache (hari)",
+      "notionToken": "Token Notion",
+      "readwiseToken": "Token Readwise",
+      "obsidianVault": "Path Vault Obsidian"
+    },
+    "placeholders": {
+      "chatApiKey": "Masukkan API Key untuk {{provider}}",
+      "chatEndpoint": "mis. https://api.openai.com/v1",
+      "asrApiKey": "Masukkan API Key untuk {{provider}}",
+      "asrEndpoint": "mis. https://api.openai.com/v1",
+      "notionToken": "secret_...",
+      "obsidianVault": "/path/ke/vault"
+    },
+    "languageHint": "Mempengaruhi antarmuka sidebar / popup / pengaturan, dan bahasa jawaban AI.",
+    "clearAllCache": "Hapus Semua Cache",
+    "cacheCleared": "Dihapus!",
+    "storageNote": "Semua key disimpan secara lokal di browser Anda.",
+    "freeHint": {
+      "signup": "Halaman pendaftaran:",
+      "keyPage": "Buat API Key:",
+      "usage": "Setelah dibuat, pilih model yang sesuai di dropdown di atas dan tempelkan API Key ke kolom input.",
+      "help": "Belum paham cara mendaftar atau membuat API Key? Tanyakan ke chatbot AI mana pun untuk memandu Anda langkah demi langkah.",
+      "chatIntro": "Jika Anda belum membeli API Key model AI apa pun, kami merekomendasikan mendaftar di Ollama. Platform ini memungkinkan mendaftarkan API Key secara gratis dan memberi pengguna gratis kuota cukup longgar — memadai untuk penggunaan tidak intensif.",
+      "asrIntro": "Jika Anda belum membeli API Key model AI apa pun, kami merekomendasikan mendaftar di Groq. Platform ini memungkinkan mendaftarkan API Key secara gratis dan memberi pengguna gratis kuota cukup longgar — memadai untuk penggunaan tidak intensif."
+    },
+    "ollama": {
+      "loading": "Mengambil model yang tersedia dari Ollama Cloud...",
+      "fetchFailed": "Gagal mengambil daftar model Ollama: {{error}}. Menampilkan daftar default."
+    },
+    "saveBtn": "Simpan Semua Pengaturan"
+  }
+}
