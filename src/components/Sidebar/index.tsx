@@ -9,6 +9,7 @@ import { SummaryPanel } from "./SummaryPanel"
 import { CommentsPanel } from "./CommentsPanel"
 import { AskAIPanel } from "./AskAIPanel"
 import { MindMapPanel } from "./MindMapPanel"
+import { ExportMenu } from "./ExportMenu"
 
 interface Props {
     service: IPlatformService
@@ -34,6 +35,7 @@ function SidebarContent({ activeTab, setActiveTab, onClose }: {
                     {videoInfo?.title || t("sidebar.defaultTitle")}
                 </h2>
                 <LanguageSwitcher variant="compact" />
+                <ExportMenu />
                 <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 transition-colors" title={t("common.close")}>
                     <X size={20} />
                 </button>
