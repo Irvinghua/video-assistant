@@ -226,13 +226,16 @@ async function handleFetch(message: any, sendResponse: (r: any) => void) {
         const response = await fetch(url, fetchOptions)
         const text = await response.text()
         console.log(`[VA-BG] handleFetch ${url.substring(0, 80)} -> status=${response.status}, len=${text.length}`)
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${text.substring(0, 50)}`)
+        if (!response.ok) {
+            sendResponse({ success: false, error: `HTTP ${response.status}: ${text.substring(0, 200)}`, status: response.status })
+            return
+        }
 
         try {
             const data = JSON.parse(text)
-            sendResponse({ success: true, data })
+            sendResponse({ success: true, data, status: response.status })
         } catch (e) {
-            sendResponse({ success: true, data: text, isRaw: true })
+            sendResponse({ success: true, data: text, isRaw: true, status: response.status })
         }
     } catch (error) {
         sendResponse({ success: false, error: (error as Error).message })
