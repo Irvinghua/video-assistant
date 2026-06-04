@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { it, expect } from "vitest"
 import { toMarkdown } from "./toMarkdown"
 import type { NoteDocument } from "../NoteDocument"
 

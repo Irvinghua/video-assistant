@@ -18,7 +18,10 @@ function flatten(md: string): FlatNode[] {
     }
     const list = raw.match(/^(\s*)[-*]\s+(.*)$/)
     if (list) {
-      const indent = Math.floor(list[1].length / 2)
+      // Normalize tabs to 2 spaces — LLM mindmap output isn't guaranteed to use
+      // spaces, and an un-normalized tab (length 1) would floor to indent 0,
+      // collapsing a nested item into a sibling.
+      const indent = Math.floor(list[1].replace(/\t/g, "  ").length / 2)
       out.push({ depth: headingDepth + 1 + indent, text: list[2].trim() })
       continue
     }
