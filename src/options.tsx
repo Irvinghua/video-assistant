@@ -131,8 +131,9 @@ function OptionsIndex() {
 
     const [cacheDays, setCacheDays] = useState(3)
     const [notionToken, setNotionToken] = useState("")
-    const [readwiseToken, setReadwiseToken] = useState("")
+    const [notionParentPageId, setNotionParentPageId] = useState("")
     const [obsidianVault, setObsidianVault] = useState("")
+    const [obsidianFolder, setObsidianFolder] = useState("")
     const [status, setStatus] = useState("")
     const [cacheCleared, setCacheCleared] = useState(false)
 
@@ -181,8 +182,9 @@ function OptionsIndex() {
 
         const days = await storage.get("cacheDays") || 3
         const notion = await storage.get("notionToken") || ""
-        const readwise = await storage.get("readwiseToken") || ""
+        const notionParent = await storage.get("notionParentPageId") || ""
         const obsidian = await storage.get("obsidianVault") || ""
+        const obsidianFld = await storage.get("obsidianFolder") || ""
 
         setChatProvider(cProvider)
         setChatModel(cModel)
@@ -194,8 +196,9 @@ function OptionsIndex() {
         setAsrApiKey(asrKey)
         setCacheDays(Number(days))
         setNotionToken(notion)
-        setReadwiseToken(readwise)
+        setNotionParentPageId(notionParent)
         setObsidianVault(obsidian)
+        setObsidianFolder(obsidianFld)
     }
 
     const handleSave = async () => {
@@ -209,8 +212,9 @@ function OptionsIndex() {
         await storage.set("asrApiKey", asrApiKey)
         await storage.set("cacheDays", cacheDays)
         await storage.set("notionToken", notionToken)
-        await storage.set("readwiseToken", readwiseToken)
+        await storage.set("notionParentPageId", notionParentPageId)
         await storage.set("obsidianVault", obsidianVault)
+        await storage.set("obsidianFolder", obsidianFolder)
         setStatus(t("options.savedToast"))
         setTimeout(() => setStatus(""), 2000)
     }
@@ -488,12 +492,13 @@ function OptionsIndex() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.readwiseToken")}</label>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionParentPageId")}</label>
                             <input
-                                type="password"
-                                value={readwiseToken}
-                                onChange={(e) => setReadwiseToken(e.target.value)}
+                                type="text"
+                                value={notionParentPageId}
+                                onChange={(e) => setNotionParentPageId(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder={t("options.placeholders.notionParentPageId")}
                             />
                         </div>
 
@@ -505,6 +510,17 @@ function OptionsIndex() {
                                 onChange={(e) => setObsidianVault(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 placeholder={t("options.placeholders.obsidianVault")}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianFolder")}</label>
+                            <input
+                                type="text"
+                                value={obsidianFolder}
+                                onChange={(e) => setObsidianFolder(e.target.value)}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder={t("options.placeholders.obsidianFolder")}
                             />
                         </div>
                     </div>
