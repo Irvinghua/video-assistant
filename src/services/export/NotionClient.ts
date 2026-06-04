@@ -39,7 +39,7 @@ export class TokenNotionClient implements NotionClient {
         children: first
       })
     })
-    if (!createResp.success) throw mapError(createResp.status, (createResp as { success: false; error: string; status?: number }).error)
+    if (!createResp.success) throw mapError(createResp.status, createResp.error)
     const pageId = createResp.data.id as string
 
     for (let i = 0; i < rest.length; i += MAX_BLOCKS) {
@@ -49,7 +49,7 @@ export class TokenNotionClient implements NotionClient {
         headers: this.headers(),
         body: JSON.stringify({ children: batch })
       })
-      if (!appendResp.success) throw mapError(appendResp.status, (appendResp as { success: false; error: string; status?: number }).error)
+      if (!appendResp.success) throw mapError(appendResp.status, appendResp.error)
     }
     return pageId
   }

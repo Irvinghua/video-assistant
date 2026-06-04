@@ -51,6 +51,7 @@ export class ExportService {
 
   static async exportTo(id: TargetId, doc: NoteDocument): Promise<ExportResult> {
     const target = await ExportService.buildTarget(id)
+    if (!target.isConfigured()) throw new Error("TARGET_NOT_CONFIGURED")
     return target.export(doc)
   }
 }
