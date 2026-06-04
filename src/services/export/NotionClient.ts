@@ -1,4 +1,4 @@
-import type { FetchProxy } from "./fetchProxy"
+import type { FetchProxy, ProxyResponse } from "./fetchProxy"
 import { backgroundFetchProxy } from "./fetchProxy"
 
 const NOTION_VERSION = "2022-06-28"
@@ -13,6 +13,12 @@ function mapError(status: number | undefined, raw: string): Error {
   if (status === 404) return new Error("NOTION_PARENT_NOT_FOUND")
   if (status === 429) return new Error("NOTION_RATE_LIMITED")
   return new Error(`NOTION_ERROR: ${raw}`)
+}
+
+// The project's tsconfig has `strict: false`, so `if (!resp.success)` does not
+// narrow ProxyResponse to its error arm. Read `error` defensively instead.
+function errorOf(resp: ProxyResponse): string {
+  return (resp as { error?: string }).error ?? "unknown error"
 }
 
 export class TokenNotionClient implements NotionClient {
@@ -39,7 +45,7 @@ export class TokenNotionClient implements NotionClient {
         children: first
       })
     })
-    if (!createResp.success) throw mapError(createResp.status, createResp.error)
+    if (!createResp.success) throw mapError(createResp.status, errorOf(createResp))
     const pageId = createResp.data.id as string
 
     for (let i = 0; i < rest.length; i += MAX_BLOCKS) {
@@ -49,7 +55,7 @@ export class TokenNotionClient implements NotionClient {
         headers: this.headers(),
         body: JSON.stringify({ children: batch })
       })
-      if (!appendResp.success) throw mapError(appendResp.status, appendResp.error)
+      if (!appendResp.success) throw mapError(appendResp.status, errorOf(appendResp))
     }
     return pageId
   }
