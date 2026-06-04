@@ -141,8 +141,9 @@
       "asrApiKey": "ASR API Key",
       "cacheDays": "キャッシュ有効期間（日）",
       "notionToken": "Notion Token",
-      "readwiseToken": "Readwise Token",
-      "obsidianVault": "Obsidian Vault パス"
+      "notionParentPageId": "Notion Parent Page ID",
+      "obsidianVault": "Obsidian Vault Name",
+      "obsidianFolder": "Obsidian Target Folder (optional)"
     },
     "placeholders": {
       "chatApiKey": "{{provider}} の API Key を入力",
@@ -150,7 +151,9 @@
       "asrApiKey": "{{provider}} の API Key を入力",
       "asrEndpoint": "例: https://api.openai.com/v1",
       "notionToken": "secret_...",
-      "obsidianVault": "/path/to/vault"
+      "notionParentPageId": "Share the page with your integration, then paste its 32-char ID",
+      "obsidianVault": "Your vault name (case-sensitive)",
+      "obsidianFolder": "e.g. Clippings/Videos"
     },
     "languageHint": "サイドバー / ポップアップ / 設定画面の UI 言語、および AI の応答言語に影響します。",
     "clearAllCache": "全キャッシュをクリア",
@@ -169,5 +172,36 @@
       "fetchFailed": "Ollama モデル一覧の取得に失敗しました: {{error}}。デフォルト一覧を表示しています。"
     },
     "saveBtn": "全設定を保存"
+  },
+  "exportMenu": {
+    "button": "Export",
+    "toNotion": "Send to Notion",
+    "toObsidian": "Send to Obsidian",
+    "download": "Download .md",
+    "needConfig": "Configure this in Settings first",
+    "empty": "Nothing to export yet — generate a summary/analysis/mind map first",
+    "notionSuccess": "Sent to Notion",
+    "obsidianInvoked": "Obsidian opened",
+    "downloaded": "File downloaded",
+    "fallbackDownloaded": "Content too long — downloaded a file instead",
+    "errorUnauthorized": "Invalid Notion token",
+    "errorParentNotFound": "Parent page not found — make sure it's shared with your integration",
+    "errorRateLimited": "Notion is rate-limiting — try again shortly",
+    "errorGeneric": "Export failed",
+    "labels": {
+      "summarySection": "Video Summary",
+      "commentsSection": "Comment Insights",
+      "mindmapSection": "Mind Map",
+      "oneLiner": "One-liner",
+      "keyPoints": "Key Points",
+      "fullDigest": "Full Digest",
+      "consensus": "Consensus",
+      "divergences": "Divergences",
+      "gap": "Video vs Audience",
+      "gapHit": "Hit",
+      "gapMiss": "Blind spot / Overflow",
+      "mood": "Mood",
+      "spotlight": "Spotlight"
+    }
   }
 }

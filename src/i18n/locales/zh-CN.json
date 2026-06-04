@@ -141,8 +141,9 @@
       "asrApiKey": "ASR API Key",
       "cacheDays": "缓存有效期（天）",
       "notionToken": "Notion Token",
-      "readwiseToken": "Readwise Token",
-      "obsidianVault": "Obsidian Vault 路径"
+      "notionParentPageId": "Notion 父页面 ID",
+      "obsidianVault": "Obsidian Vault 名称",
+      "obsidianFolder": "Obsidian 目标文件夹（可选）"
     },
     "placeholders": {
       "chatApiKey": "请输入 {{provider}} 的 API Key",
@@ -150,7 +151,9 @@
       "asrApiKey": "请输入 {{provider}} 的 API Key",
       "asrEndpoint": "例如 https://api.openai.com/v1",
       "notionToken": "secret_...",
-      "obsidianVault": "/path/to/vault"
+      "notionParentPageId": "把目标页面分享给 integration 后，粘贴其 32 位 ID",
+      "obsidianVault": "你的 vault 名称（区分大小写）",
+      "obsidianFolder": "如 Clippings/Videos"
     },
     "languageHint": "影响侧边栏 / 弹窗 / 设置页的界面语言，以及 AI 回答所用的语言。",
     "clearAllCache": "清除全部缓存",
@@ -169,5 +172,36 @@
       "fetchFailed": "获取 Ollama 模型列表失败：{{error}}。已显示默认列表。"
     },
     "saveBtn": "保存全部设置"
+  },
+  "exportMenu": {
+    "button": "导出",
+    "toNotion": "导入到 Notion",
+    "toObsidian": "导入到 Obsidian",
+    "download": "下载 .md",
+    "needConfig": "请先在设置中配置",
+    "empty": "暂无可导出的内容，请先生成总结/分析/导图",
+    "notionSuccess": "已导入 Notion",
+    "obsidianInvoked": "已唤起 Obsidian",
+    "downloaded": "已下载文件",
+    "fallbackDownloaded": "内容较长，已改为下载文件",
+    "errorUnauthorized": "Notion Token 无效",
+    "errorParentNotFound": "未找到父页面，请确认已把页面分享给 integration",
+    "errorRateLimited": "Notion 请求过于频繁，请稍后重试",
+    "errorGeneric": "导出失败",
+    "labels": {
+      "summarySection": "视频总结",
+      "commentsSection": "舆情报告",
+      "mindmapSection": "思维导图",
+      "oneLiner": "一句话简介",
+      "keyPoints": "分段要点",
+      "fullDigest": "全文精简稿",
+      "consensus": "核心共识",
+      "divergences": "主要分歧",
+      "gap": "视频 vs 观众",
+      "gapHit": "命中区",
+      "gapMiss": "盲区/溢出",
+      "mood": "舆情氛围",
+      "spotlight": "独立见解"
+    }
   }
 }

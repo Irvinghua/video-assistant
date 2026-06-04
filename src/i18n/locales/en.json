@@ -141,8 +141,9 @@
       "asrApiKey": "ASR API Key",
       "cacheDays": "Cache Validity (Days)",
       "notionToken": "Notion Token",
-      "readwiseToken": "Readwise Token",
-      "obsidianVault": "Obsidian Vault Path"
+      "notionParentPageId": "Notion Parent Page ID",
+      "obsidianVault": "Obsidian Vault Name",
+      "obsidianFolder": "Obsidian Target Folder (optional)"
     },
     "placeholders": {
       "chatApiKey": "Enter API Key for {{provider}}",
@@ -150,7 +151,9 @@
       "asrApiKey": "Enter API Key for {{provider}}",
       "asrEndpoint": "e.g. https://api.openai.com/v1",
       "notionToken": "secret_...",
-      "obsidianVault": "/path/to/vault"
+      "notionParentPageId": "Share the page with your integration, then paste its 32-char ID",
+      "obsidianVault": "Your vault name (case-sensitive)",
+      "obsidianFolder": "e.g. Clippings/Videos"
     },
     "languageHint": "Affects sidebar / popup / options UI, and the language the AI answers in.",
     "clearAllCache": "Clear All Cache",
@@ -169,5 +172,36 @@
       "fetchFailed": "Failed to fetch Ollama model list: {{error}}. Showing default list."
     },
     "saveBtn": "Save All Settings"
+  },
+  "exportMenu": {
+    "button": "Export",
+    "toNotion": "Send to Notion",
+    "toObsidian": "Send to Obsidian",
+    "download": "Download .md",
+    "needConfig": "Configure this in Settings first",
+    "empty": "Nothing to export yet — generate a summary/analysis/mind map first",
+    "notionSuccess": "Sent to Notion",
+    "obsidianInvoked": "Obsidian opened",
+    "downloaded": "File downloaded",
+    "fallbackDownloaded": "Content too long — downloaded a file instead",
+    "errorUnauthorized": "Invalid Notion token",
+    "errorParentNotFound": "Parent page not found — make sure it's shared with your integration",
+    "errorRateLimited": "Notion is rate-limiting — try again shortly",
+    "errorGeneric": "Export failed",
+    "labels": {
+      "summarySection": "Video Summary",
+      "commentsSection": "Comment Insights",
+      "mindmapSection": "Mind Map",
+      "oneLiner": "One-liner",
+      "keyPoints": "Key Points",
+      "fullDigest": "Full Digest",
+      "consensus": "Consensus",
+      "divergences": "Divergences",
+      "gap": "Video vs Audience",
+      "gapHit": "Hit",
+      "gapMiss": "Blind spot / Overflow",
+      "mood": "Mood",
+      "spotlight": "Spotlight"
+    }
   }
 }
