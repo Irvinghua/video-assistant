@@ -57,3 +57,8 @@ it("marks comments missing when there are no sampled comments", async () => {
   expect(deps.genComments).not.toHaveBeenCalled()
   expect(r.missing).toEqual(["comments"])
 })
+
+it("propagates generator errors to the caller (no swallow)", async () => {
+  const deps = makeDeps({ genSummary: vi.fn(async () => { throw new Error("AI not configured") }) })
+  await expect(ensureSections(new Set(["summary"]), inputs, deps)).rejects.toThrow("AI not configured")
+})

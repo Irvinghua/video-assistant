@@ -40,6 +40,15 @@ const defaultDeps: EnsureDeps = {
   genMindmap: (script, lang) => generateMindmapMarkdown(script, lang)
 }
 
+/**
+ * Ensure each selected section is available, generating + caching the ones that
+ * are missing but whose prerequisites exist. Sections whose prerequisites are
+ * absent (no subtitles for summary/mindmap, no sampled comments for comments)
+ * are listed in `missing` and NOT generated — ASR is never triggered here.
+ *
+ * Throws if a selected, uncached section's generator fails (e.g. AI not
+ * configured); the caller is responsible for surfacing that error.
+ */
 export async function ensureSections(
   sections: Set<Section>,
   inputs: SectionInputs,
