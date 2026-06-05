@@ -1,16 +1,20 @@
 import { useState } from "react"
 import { Download } from "lucide-react"
+import { Storage } from "@plasmohq/storage"
 import { useVideo } from "../../contexts/VideoContext"
-import { useTranslation } from "../../i18n/useTranslation"
+import { useI18n } from "../../i18n/I18nProvider"
 import { ExportService, type TargetId } from "../../services/export/ExportService"
+import { DownloadTarget } from "../../services/export/targets/DownloadTarget"
 import { buildNoteDocument, type NoteLabels } from "../../services/export/NoteBuilder"
 import { buildVideoUrl } from "../../services/export/buildVideoUrl"
-import { cacheService, cacheKeys } from "../../services/cache/CacheService"
-import type { SummaryResult, CommentAnalysis } from "../../services/ai/types"
+import { ensureSections } from "../../services/export/ExportContentProvider"
+import { structureToSections, type ExportStructure } from "../../services/export/exportStructure"
+
+const storage = new Storage()
 
 export function ExportMenu() {
-  const { videoInfo, platform } = useVideo()
-  const { t } = useTranslation()
+  const { videoInfo, platform, subtitles, sampledComments } = useVideo()
+  const { t, aiLanguage } = useI18n()
   const [open, setOpen] = useState(false)
   const [toast, setToast] = useState("")
 
@@ -28,7 +32,6 @@ export function ExportMenu() {
     gapMiss: t("exportMenu.labels.gapMiss"),
     mood: t("exportMenu.labels.mood"),
     spotlight: t("exportMenu.labels.spotlight"),
-    // source/author/exportedAt are unused by NoteBuilder rendering; pass empty.
     source: "",
     author: "",
     exportedAt: ""
@@ -45,21 +48,43 @@ export function ExportMenu() {
       flash(t("exportMenu.empty"))
       return
     }
-    // Read the live cache rather than VideoContext.cachedData: cachedData is only
-    // populated on load, so freshly-generated content (written to cacheService by
-    // the panel hooks) would otherwise be missed.
-    const summaryKey = cacheKeys.summary(platform, videoInfo.id)
-    const commentsKey = cacheKeys.comments(platform, videoInfo.id)
-    const mindmapKey = cacheKeys.mindmap(platform, videoInfo.id)
-    const batch = await cacheService.getBatch([summaryKey, commentsKey, mindmapKey])
-    const summary = (batch[summaryKey] as SummaryResult) ?? null
-    const comments = (batch[commentsKey] as CommentAnalysis) ?? null
-    const mindmap = (batch[mindmapKey] as string) ?? null
 
+    let target = null
+    if (id !== "download") {
+      target = await ExportService.buildTarget(id)
+      if (!target.isConfigured()) {
+        chrome.runtime.sendMessage({ type: "OPEN_OPTIONS_PAGE" })
+        flash(t("exportMenu.needConfig"))
+        return
+      }
+    }
+
+    const structure = ((await storage.get("exportStructure")) || "summary") as ExportStructure
+    const sections = structureToSections(structure)
+    flash(t("exportMenu.generating"))
+    let ensured
+    try {
+      ensured = await ensureSections(sections, {
+        platform,
+        videoId: videoInfo.id,
+        language: aiLanguage,
+        subtitles,
+        sampledComments
+      })
+    } catch (e) {
+      console.error("[ExportMenu] generation failed:", e)
+      flash(t("exportMenu.needAiConfig"))
+      return
+    }
+
+    const summary = sections.has("summary") ? ensured.summary : null
+    const comments = sections.has("comments") ? ensured.comments : null
+    const mindmap = sections.has("mindmap") ? ensured.mindmap : null
     if (!summary && !comments && !mindmap) {
       flash(t("exportMenu.empty"))
       return
     }
+
     const doc = buildNoteDocument({
       title: videoInfo.title,
       sourceUrl: buildVideoUrl(platform, videoInfo.id),
@@ -71,16 +96,23 @@ export function ExportMenu() {
       mindmap,
       labels
     })
+
     try {
-      const result = await ExportService.exportTo(id, doc)
-      if (result.kind === "invoked") flash(t("exportMenu.obsidianInvoked"))
-      else if (result.kind === "fallback-download") flash(t("exportMenu.fallbackDownloaded"))
-      else if (id === "notion") flash(t("exportMenu.notionSuccess"))
-      else flash(t("exportMenu.downloaded"))
+      const result = id === "download" ? await new DownloadTarget().export(doc) : await target!.export(doc)
+      if (ensured.missing.length) {
+        flash(t("exportMenu.partialMissing"))
+      } else if (result.kind === "invoked") {
+        flash(t("exportMenu.obsidianInvoked"))
+      } else if (result.kind === "fallback-download") {
+        flash(t("exportMenu.fallbackDownloaded"))
+      } else if (id === "notion") {
+        flash(t("exportMenu.notionSuccess"))
+      } else {
+        flash(t("exportMenu.downloaded"))
+      }
     } catch (e) {
       const code = (e as Error).message
-      if (code === "TARGET_NOT_CONFIGURED") flash(t("exportMenu.needConfig"))
-      else if (code === "NOTION_UNAUTHORIZED") flash(t("exportMenu.errorUnauthorized"))
+      if (code === "NOTION_UNAUTHORIZED") flash(t("exportMenu.errorUnauthorized"))
       else if (code === "NOTION_PARENT_NOT_FOUND") flash(t("exportMenu.errorParentNotFound"))
       else if (code === "NOTION_RATE_LIMITED") flash(t("exportMenu.errorRateLimited"))
       else flash(t("exportMenu.errorGeneric"))
