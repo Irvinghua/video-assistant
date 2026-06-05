@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react"
-import { AIServiceFactory } from "../services/ai/AIServiceFactory"
 import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { getPlainScript } from "../services/cache/SubtitleScript"
-import { Prompts } from "../services/ai/prompts"
-import { chunkText } from "../utils/textChunker"
+import { generateMindmapMarkdown } from "../services/summarizer/MindmapGenerator"
 import type { SubtitleSegment } from "../services/platform/types"
 import { useVideo } from "../contexts/VideoContext"
 import { useI18n } from "../i18n/I18nProvider"
@@ -71,21 +69,8 @@ export function useMindMap(isActive: boolean): UseMindMapResult {
         setLoading(true)
         setError("")
         try {
-            const aiService = await AIServiceFactory.getService()
-
-            const chunks = chunkText(script, 3000)
-            let combinedText = script
-            if (chunks.length > 1) {
-                const summaries = await Promise.all(
-                    chunks.map(chunk => aiService.chat([{ role: "user", content: Prompts.mindmapChunkSummary(chunk, aiLanguage) }]))
-                )
-                combinedText = summaries.join("\n\n")
-            }
-
-            const result = await aiService.chat([{ role: "user", content: Prompts.mindmap(combinedText, aiLanguage) }])
+            const cleaned = await generateMindmapMarkdown(script, aiLanguage)
             if (currentVideoIdRef.current !== videoId) return
-
-            const cleaned = result.replace(/^```(?:markdown)?\n?/m, "").replace(/\n?```$/m, "").trim()
             setMarkdown(cleaned)
             await cacheService.set(cacheKeys.mindmap(platform, videoId), cleaned)
             console.log(`[useMindMap] Generated and cached mindmap for ${videoId}`)
