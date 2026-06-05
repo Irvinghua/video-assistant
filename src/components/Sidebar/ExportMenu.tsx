@@ -64,16 +64,14 @@ export function ExportMenu() {
 
     const structure = ((await storage.get("exportStructure")) || "summary") as ExportStructure
     const sections = structureToSections(structure)
-    flash(t("exportMenu.generating"))
     let ensured
     try {
-      ensured = await ensureSections(sections, {
-        platform,
-        videoId: videoInfo.id,
-        language: aiLanguage,
-        subtitles,
-        sampledComments
-      })
+      ensured = await ensureSections(
+        sections,
+        { platform, videoId: videoInfo.id, language: aiLanguage, subtitles, sampledComments },
+        undefined,
+        () => flash(t("exportMenu.generating"))  // only fires when a section is actually generated
+      )
     } catch (e) {
       console.error("[ExportMenu] generation failed:", e)
       flash(t("exportMenu.needAiConfig"))

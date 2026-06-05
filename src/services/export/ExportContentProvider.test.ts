@@ -62,3 +62,18 @@ it("propagates generator errors to the caller (no swallow)", async () => {
   const deps = makeDeps({ genSummary: vi.fn(async () => { throw new Error("AI not configured") }) })
   await expect(ensureSections(new Set(["summary"]), inputs, deps)).rejects.toThrow("AI not configured")
 })
+
+it("fires onGenerate only for sections it actually generates", async () => {
+  const onGenerate = vi.fn()
+  const deps = makeDeps() // getCached returns null → summary will be generated, mindmap not selected
+  await ensureSections(new Set(["summary"]), inputs, deps, onGenerate)
+  expect(onGenerate).toHaveBeenCalledTimes(1)
+  expect(onGenerate).toHaveBeenCalledWith("summary")
+})
+
+it("does NOT fire onGenerate when the section is already cached", async () => {
+  const onGenerate = vi.fn()
+  const deps = makeDeps({ getCached: vi.fn(async () => summary) as EnsureDeps["getCached"] })
+  await ensureSections(new Set(["summary"]), inputs, deps, onGenerate)
+  expect(onGenerate).not.toHaveBeenCalled()
+})

@@ -48,11 +48,16 @@ const defaultDeps: EnsureDeps = {
  *
  * Throws if a selected, uncached section's generator fails (e.g. AI not
  * configured); the caller is responsible for surfacing that error.
+ *
+ * `onGenerate` fires right before a section is actually generated (cache miss
+ * with prerequisites available) — so callers can show a "generating…" hint only
+ * when work really happens, not on a pure cache hit.
  */
 export async function ensureSections(
   sections: Set<Section>,
   inputs: SectionInputs,
-  deps: EnsureDeps = defaultDeps
+  deps: EnsureDeps = defaultDeps,
+  onGenerate?: (section: Section) => void
 ): Promise<EnsureResult> {
   const { platform, videoId, language, subtitles, sampledComments } = inputs
   const result: EnsureResult = { summary: null, comments: null, mindmap: null, missing: [] }
@@ -68,6 +73,7 @@ export async function ensureSections(
     let s = await deps.getCached<SummaryResult>(key)
     if (!s) {
       if (subtitles.length) {
+        onGenerate?.("summary")
         s = await deps.genSummary(subtitles, language)
         await deps.setCached(key, s)
       } else {
@@ -84,6 +90,7 @@ export async function ensureSections(
       const hasSamples = !!sampledComments &&
         sampledComments.consensus.length + sampledComments.controversial.length > 0
       if (hasSamples && script) {
+        onGenerate?.("comments")
         c = await deps.genComments(sampledComments as SampledComments, script, language)
         await deps.setCached(key, c)
       } else {
@@ -98,6 +105,7 @@ export async function ensureSections(
     let m = await deps.getCached<string>(key)
     if (!m) {
       if (script) {
+        onGenerate?.("mindmap")
         m = await deps.genMindmap(script, language)
         await deps.setCached(key, m)
       } else {
