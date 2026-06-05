@@ -1,7 +1,7 @@
 # 一键导入笔记（Notion + Obsidian）设计文档
 
-- 日期：2026-06-04
-- 状态：已通过 brainstorming，待实现
+- 日期：2026-06-04（2026-06-05 修订 Obsidian 方案）
+- 状态：已实现并真机验证（下载 .md ✓、Obsidian 剪贴板方案 ✓）；Notion 通路待用户填 token+父页面 ID 后验证
 - 范围：为视频总结、评论分析、思维导图增加"一键导入到 Notion / Obsidian"能力；移除 Readwise 支持。
 
 ## 1. 背景与目标
@@ -28,7 +28,7 @@
 | 使用范围 | 面向普通用户、尽量零配置 | 用户指定 |
 | Notion 认证 | **token 粘贴 MVP**，抽象 `NotionClient` 接口，OAuth 可插拔 | 纯扩展无法安全保管 OAuth `client_secret`；后端以后再说 |
 | Notion 父对象 | **MVP 只支持父"页面"**（单个 page ID） | 最简单；database 属性写入留作后续 |
-| Obsidian 写入 | **`obsidian://new` URI 直写** + 长度保护回退 | 无官方 HTTP API；零插件；URI 是核心内置能力 |
+| Obsidian 写入 | **剪贴板 + `obsidian://new?...&clipboard=true`**（修订，见 §6） | 无官方 HTTP API；零插件；正文走系统剪贴板，URL 不带正文 → 无长度限制 |
 | 笔记结构 | **三类合并为一篇笔记**，三个一级标题分节 | 用户选择；便于检索 |
 | 思维导图呈现 | **原生嵌套 Markdown 大纲** | Notion API 不能上传图片（仅外部 URL）；Obsidian 零插件不渲染 markmap |
 
@@ -101,19 +101,28 @@ type RichText = { text: string; bold?: boolean }
 
 由 `toNotionBlocks` 从 `NoteDocument` 直接生成，支持：`heading_2/3`、`paragraph`、`bulleted_list_item`（含子项嵌套）、`bold` 注解。不支持的块类型降级为 paragraph。
 
-## 6. Obsidian 通路（`obsidian://new` 直写 + 长度保护）
+## 6. Obsidian 通路（剪贴板 + `obsidian://new?...&clipboard=true`）
+
+> **修订说明（2026-06-05）**：初版采用 `obsidian://new?...&content=<整篇markdown>` 的 URI 直写 + 8KB 长度回退。实测发现该方案不可靠——即便不足 2000 字的笔记，`content=` 编码后也会触碰 OS/URL 长度上限而失败。改为下述**剪贴板方案**：正文不进 URL，因此**无任何长度限制**。
 
 - 设置项：**Vault 名称**（obsidian:// 用 vault 名，非路径——现有 `obsidianVault` 字段语义需变更）+ 可选**目标文件夹**。
-- 构造 `obsidian://new?vault=<name>&file=<folder/标题>&content=<encodeURIComponent(markdown)>`，`window.open` 唤起。
-- **长度保护**：URI 受 OS 命令行长度限制。当 `content` 编码后超过安全阈值（约 8KB）→ 自动将全文复制到剪贴板 + 回退触发 `.md` 下载，toast 提示。
-- 协议为 fire-and-forget，无法探知写入结果 → 成功态仅提示"已唤起 Obsidian"。
+- 实现逻辑（`ObsidianTarget.export`）：
+  1. 由 `toMarkdown(NoteDocument)` 生成整篇 Markdown。
+  2. **静默写入系统剪贴板**：先试 `navigator.clipboard.writeText`，失败则回退 `document.execCommand("copy")`（临时 textarea）。因为处理函数在写剪贴板前 `await` 了缓存读取，原始点击手势的 transient activation 可能已失效，execCommand 路径不依赖它，更稳。
+  3. 构造**极短**链接 `obsidian://new?vault=<name>&file=<folder/标题>&clipboard=true`（纯函数 `buildObsidianUri`，正文**不**进 URL），用隐藏 `<a>` 点击唤起（避免 `window.open` 残留空白页）。
+  4. Obsidian 识别核心内置参数 `clipboard=true` 后，自动读取系统剪贴板大文本填入新建笔记。
+- **权限**：manifest 增加 `clipboardWrite`，保障 execCommand 复制稳定（清单变更需重载扩展才生效；实测仅刷新页面、权限未激活时剪贴板写入也已可用，该权限为冗余保险）。
+- **回退**：仅当剪贴板写入彻底失败（两条路径都抛错）才退到 `.md` 下载，toast 提示"剪贴板不可用，已改为下载文件"。**不再有按长度回退的逻辑**。
+- 协议为 fire-and-forget，无法探知写入结果 → 成功态提示"已唤起 Obsidian"。
 - 文件名/路径需做非法字符清洗（`/ \ : * ? " < > |`）。
+- 参考：[Obsidian URI 官方文档](https://obsidian.md/help/uri)，`clipboard` 为 `new` 动作的核心内置参数，无需任何社区插件。
 
 ## 7. UI / UX
 
 - 单个导出入口置于 Sidebar 顶部工具栏：一个"导出"按钮 → 下拉菜单列出目标（导入到 Notion / 导入到 Obsidian / 下载 .md）。
 - 未配置目标置灰，点击引导"前往设置"。
-- 导出时按当前已生成/缓存内容组装；三类全空则禁用并提示先生成。
+- 导出时按当前已生成/缓存内容组装；三类全空则提示先生成。
+  - **数据来源（修订 2026-06-05）**：`ExportMenu` 在点击导出时直接读 `cacheService.getBatch([summary,comments,mindmap])` 实时缓存，**不**读 `VideoContext.cachedData`。原因：`cachedData` 仅在页面加载时填充一次，本会话内现场生成的内容（由各 panel hook 写入 `cacheService`）不会反映到它，否则会误判"暂无可导出"。
 - 设置页 Knowledge Export 区：删除 Readwise 输入框；Notion 增加父页面 ID 字段；Obsidian 字段改为 vault 名 + 文件夹；各加简短引导文案。
 
 ## 8. 国际化
@@ -124,13 +133,13 @@ type RichText = { text: string; bold?: boolean }
 ## 9. 错误处理
 
 - Notion：401（token 无效）/ 404（父页面未找到或未共享给 integration）/ 429（限流）→ 各自明确 toast。
-- Obsidian：超长按 §6 回退；vault 名为空引导去设置。
+- Obsidian：剪贴板写入彻底失败才回退 `.md` 下载（§6）；vault 名为空时 `isConfigured` 为 false，由 `ExportService.exportTo` 抛 `TARGET_NOT_CONFIGURED` → 引导去设置。
 - 缺内容：只导已生成的；全空拦截。
 
 ## 10. 测试策略
 
-- 纯函数单测：`NoteBuilder`、`toMarkdown`、`toNotionBlocks`、思维导图缩进解析、Obsidian 长度判定与文件名清洗。
-- 目标层：`NotionClient` mock，验证请求体与分批逻辑；`ObsidianTarget` 验证 URI 构造与回退分支。
+- 纯函数单测：`NoteBuilder`、`toMarkdown`、`toNotionBlocks`、思维导图缩进解析（含 tab/4 空格）、文件名清洗。
+- 目标层：`NotionClient` mock，验证请求体、100 块分批、401/404/429 错误映射；`ObsidianTarget` 验证 `buildObsidianUri`（含 `clipboard=true`、无 `content=`、vault 空格编码、文件夹/标题清洗）。剪贴板写入与协议唤起为 DOM 副作用，不做单测，由真机 MCP 走查覆盖。
 
 ## 11. 范围外 / 后续
 
