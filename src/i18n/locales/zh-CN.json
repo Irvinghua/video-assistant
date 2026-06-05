@@ -143,7 +143,9 @@
       "notionToken": "Notion Token",
       "notionParentPageId": "Notion 父页面 ID",
       "obsidianVault": "Obsidian Vault 名称",
-      "obsidianFolder": "Obsidian 目标文件夹（可选）"
+      "obsidianFolder": "Obsidian 目标文件夹（可选）",
+      "exportTarget": "导出目标",
+      "exportStructure": "导出结构"
     },
     "placeholders": {
       "chatApiKey": "请输入 {{provider}} 的 API Key",
@@ -173,6 +175,13 @@
     },
     "saveBtn": "保存全部设置"
   },
+  "exportTargets": { "notion": "Notion", "obsidian": "Obsidian" },
+  "exportStructures": {
+    "summary": "仅视频总结",
+    "summary_comments": "视频总结 + 评论总结",
+    "summary_mindmap": "视频总结 + 思维导图",
+    "summary_comments_mindmap": "视频总结 + 评论总结 + 思维导图"
+  },
   "exportMenu": {
     "button": "导出",
     "toNotion": "导入到 Notion",
@@ -188,6 +197,9 @@
     "errorParentNotFound": "未找到父页面，请确认已把页面分享给 integration",
     "errorRateLimited": "Notion 请求过于频繁，请稍后重试",
     "errorGeneric": "导出失败",
+    "generating": "正在生成缺失章节…",
+    "partialMissing": "部分章节缺少字幕或评论无法生成，已导出其余",
+    "needAiConfig": "请先在设置中配置 AI 模型 / API Key",
     "labels": {
       "summarySection": "视频总结",
       "commentsSection": "舆情报告",

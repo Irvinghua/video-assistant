@@ -143,7 +143,9 @@
       "notionToken": "Token do Notion",
       "notionParentPageId": "Notion Parent Page ID",
       "obsidianVault": "Obsidian Vault Name",
-      "obsidianFolder": "Obsidian Target Folder (optional)"
+      "obsidianFolder": "Obsidian Target Folder (optional)",
+      "exportTarget": "Export Target",
+      "exportStructure": "Export Structure"
     },
     "placeholders": {
       "chatApiKey": "Digite a chave API para {{provider}}",
@@ -173,6 +175,13 @@
     },
     "saveBtn": "Salvar todas as configurações"
   },
+  "exportTargets": { "notion": "Notion", "obsidian": "Obsidian" },
+  "exportStructures": {
+    "summary": "Summary only",
+    "summary_comments": "Summary + Comments",
+    "summary_mindmap": "Summary + Mind map",
+    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  },
   "exportMenu": {
     "button": "Export",
     "toNotion": "Send to Notion",
@@ -188,6 +197,9 @@
     "errorParentNotFound": "Parent page not found — make sure it's shared with your integration",
     "errorRateLimited": "Notion is rate-limiting — try again shortly",
     "errorGeneric": "Export failed",
+    "generating": "Generating missing sections…",
+    "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
+    "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
