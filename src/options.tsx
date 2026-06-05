@@ -496,8 +496,8 @@ function OptionsIndex() {
                             onChange={(e) => setExportTarget(e.target.value as "notion" | "obsidian")}
                             className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                           >
-                            <option value="notion">{t("options.exportTargets.notion")}</option>
-                            <option value="obsidian">{t("options.exportTargets.obsidian")}</option>
+                            <option value="notion">{t("exportTargets.notion")}</option>
+                            <option value="obsidian">{t("exportTargets.obsidian")}</option>
                           </select>
                         </div>
 
@@ -543,10 +543,10 @@ function OptionsIndex() {
                             onChange={(e) => setExportStructure(e.target.value)}
                             className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                           >
-                            <option value="summary">{t("options.exportStructures.summary")}</option>
-                            <option value="summary_comments">{t("options.exportStructures.summary_comments")}</option>
-                            <option value="summary_mindmap">{t("options.exportStructures.summary_mindmap")}</option>
-                            <option value="summary_comments_mindmap">{t("options.exportStructures.summary_comments_mindmap")}</option>
+                            <option value="summary">{t("exportStructures.summary")}</option>
+                            <option value="summary_comments">{t("exportStructures.summary_comments")}</option>
+                            <option value="summary_mindmap">{t("exportStructures.summary_mindmap")}</option>
+                            <option value="summary_comments_mindmap">{t("exportStructures.summary_comments_mindmap")}</option>
                           </select>
                         </div>
                     </div>

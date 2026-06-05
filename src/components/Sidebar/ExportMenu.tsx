@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Download } from "lucide-react"
 import { Storage } from "@plasmohq/storage"
 import { useVideo } from "../../contexts/VideoContext"
@@ -17,6 +17,7 @@ export function ExportMenu() {
   const { t, aiLanguage } = useI18n()
   const [open, setOpen] = useState(false)
   const [toast, setToast] = useState("")
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>()
 
   const labels: NoteLabels = {
     summarySection: t("exportMenu.labels.summarySection"),
@@ -38,8 +39,9 @@ export function ExportMenu() {
   }
 
   const flash = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast(msg)
-    setTimeout(() => setToast(""), 2500)
+    toastTimer.current = setTimeout(() => setToast(""), 2500)
   }
 
   const handle = async (id: TargetId) => {
