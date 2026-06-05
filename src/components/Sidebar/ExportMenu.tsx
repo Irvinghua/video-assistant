@@ -55,6 +55,7 @@ export function ExportMenu() {
     if (id !== "download") {
       target = await ExportService.buildTarget(id)
       if (!target.isConfigured()) {
+        await storage.set("exportConfigPrompt", id)
         chrome.runtime.sendMessage({ type: "OPEN_OPTIONS_PAGE" })
         flash(t("exportMenu.needConfig"))
         return

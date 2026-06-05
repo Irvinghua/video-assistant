@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Storage } from "@plasmohq/storage"
 import { Trash2, Save, CheckCircle } from "lucide-react"
 import { cacheService } from "./services/cache/CacheService"
@@ -136,12 +136,22 @@ function OptionsIndex() {
     const [obsidianFolder, setObsidianFolder] = useState("")
     const [exportTarget, setExportTarget] = useState<"notion" | "obsidian">("notion")
     const [exportStructure, setExportStructure] = useState("summary")
+    const [configPrompt, setConfigPrompt] = useState<"notion" | "obsidian" | null>(null)
+    const exportSectionRef = useRef<HTMLElement>(null)
     const [status, setStatus] = useState("")
     const [cacheCleared, setCacheCleared] = useState(false)
 
     useEffect(() => {
         loadSettings()
     }, [])
+
+    // When opened from the sidebar with an unconfigured target, scroll the
+    // Knowledge Export section into view so the prompt points at the right place.
+    useEffect(() => {
+        if (configPrompt) {
+            exportSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+    }, [configPrompt])
 
     useEffect(() => {
         if (chatProvider !== "Ollama Cloud") {
@@ -203,8 +213,13 @@ function OptionsIndex() {
         setNotionParentPageId(notionParent)
         setObsidianVault(obsidian)
         setObsidianFolder(obsidianFld)
-        setExportTarget(eTarget as "notion" | "obsidian")
+        const prompt = (await storage.get("exportConfigPrompt")) || ""
+        setExportTarget((prompt || eTarget) as "notion" | "obsidian")
         setExportStructure(eStructure)
+        if (prompt === "notion" || prompt === "obsidian") {
+            setConfigPrompt(prompt)
+            await storage.remove("exportConfigPrompt")
+        }
     }
 
     const handleSave = async () => {
@@ -481,7 +496,7 @@ function OptionsIndex() {
                 </section>
 
                 {/* ====== Section 4: Knowledge Export ====== */}
-                <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <section ref={exportSectionRef} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 p-1.5 rounded-md">📤</span>
                         {t("options.sections.export")}
@@ -538,16 +553,28 @@ function OptionsIndex() {
                         {/* 导出结构 */}
                         <div>
                           <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.exportStructure")}</label>
-                          <select
-                            value={exportStructure}
-                            onChange={(e) => setExportStructure(e.target.value)}
-                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                          >
-                            <option value="summary">{t("exportStructures.summary")}</option>
-                            <option value="summary_comments">{t("exportStructures.summary_comments")}</option>
-                            <option value="summary_mindmap">{t("exportStructures.summary_mindmap")}</option>
-                            <option value="summary_comments_mindmap">{t("exportStructures.summary_comments_mindmap")}</option>
-                          </select>
+                          <div className="flex flex-wrap gap-2">
+                            {["summary", "summary_comments", "summary_mindmap", "summary_comments_mindmap"].map((opt) => (
+                              <label
+                                key={opt}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                                  exportStructure === opt
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold"
+                                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="exportStructure"
+                                  value={opt}
+                                  checked={exportStructure === opt}
+                                  onChange={(e) => setExportStructure(e.target.value)}
+                                  className="accent-blue-600"
+                                />
+                                {t(`exportStructures.${opt}`)}
+                              </label>
+                            ))}
+                          </div>
                         </div>
                     </div>
                 </section>
@@ -569,6 +596,24 @@ function OptionsIndex() {
                     <div className="fixed bottom-8 start-1/2 -translate-x-1/2 px-6 py-3 bg-gray-900 text-white rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 font-medium">
                         <CheckCircle size={18} className="text-green-400" />
                         {status}
+                    </div>
+                )}
+
+                {configPrompt && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfigPrompt(null)}>
+                        <div className="mx-4 max-w-sm w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6" onClick={(e) => e.stopPropagation()}>
+                            <p className="text-base text-gray-800 dark:text-gray-100 leading-relaxed">
+                                {t("options.configPrompt", { target: t(`exportTargets.${configPrompt}`) })}
+                            </p>
+                            <div className="mt-5 flex justify-end">
+                                <button
+                                    onClick={() => setConfigPrompt(null)}
+                                    className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                                >
+                                    {t("options.configPromptOk")}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

@@ -173,9 +173,14 @@
       "loading": "Ollama Cloud से उपलब्ध मॉडल प्राप्त किए जा रहे हैं...",
       "fetchFailed": "Ollama मॉडल सूची प्राप्त करने में विफल: {{error}}. डिफ़ॉल्ट सूची दिखाई जा रही है।"
     },
-    "saveBtn": "सभी सेटिंग्स सहेजें"
+    "saveBtn": "सभी सेटिंग्स सहेजें",
+    "configPrompt": "Please configure your {{target}} import settings first",
+    "configPromptOk": "Got it"
   },
-  "exportTargets": { "notion": "Notion", "obsidian": "Obsidian" },
+  "exportTargets": {
+    "notion": "Notion",
+    "obsidian": "Obsidian"
+  },
   "exportStructures": {
     "summary": "Summary only",
     "summary_comments": "Summary + Comments",

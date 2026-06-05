@@ -173,9 +173,14 @@
       "loading": "正在从 Ollama Cloud 获取可用模型列表…",
       "fetchFailed": "获取 Ollama 模型列表失败：{{error}}。已显示默认列表。"
     },
-    "saveBtn": "保存全部设置"
+    "saveBtn": "保存全部设置",
+    "configPrompt": "请先配置个人 {{target}} 导入信息",
+    "configPromptOk": "知道了"
   },
-  "exportTargets": { "notion": "Notion", "obsidian": "Obsidian" },
+  "exportTargets": {
+    "notion": "Notion",
+    "obsidian": "Obsidian"
+  },
   "exportStructures": {
     "summary": "仅视频总结",
     "summary_comments": "视频总结 + 评论总结",

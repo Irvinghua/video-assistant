@@ -173,9 +173,14 @@
       "loading": "Récupération des modèles disponibles depuis Ollama Cloud...",
       "fetchFailed": "Échec de la récupération de la liste des modèles Ollama : {{error}}. Affichage de la liste par défaut."
     },
-    "saveBtn": "Enregistrer tous les paramètres"
+    "saveBtn": "Enregistrer tous les paramètres",
+    "configPrompt": "Please configure your {{target}} import settings first",
+    "configPromptOk": "Got it"
   },
-  "exportTargets": { "notion": "Notion", "obsidian": "Obsidian" },
+  "exportTargets": {
+    "notion": "Notion",
+    "obsidian": "Obsidian"
+  },
   "exportStructures": {
     "summary": "Summary only",
     "summary_comments": "Summary + Comments",
