@@ -529,9 +529,8 @@ function OptionsIndex() {
                                 <HelpCircle size={14} /> {t("options.notionGuide.title")}
                               </button>
                               {showNotionHelp && (
-                                <>
-                                  <div className="fixed inset-0 z-40" onClick={() => setShowNotionHelp(false)} />
-                                  <div className="absolute z-50 mt-2 w-[720px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowNotionHelp(false)}>
+                                  <div onClick={(e) => e.stopPropagation()} className="w-[720px] max-w-[90vw] max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-5 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
                                     <p className="font-bold text-sm text-gray-900 dark:text-gray-100">{t("options.notionGuide.title")}</p>
                                     <p>{t("options.notionGuide.intro")}</p>
 
@@ -549,7 +548,7 @@ function OptionsIndex() {
 
                                     <p className="text-gray-500">{t("options.notionGuide.done")}</p>
                                   </div>
-                                </>
+                                </div>
                               )}
                             </div>
                             <div>
@@ -578,9 +577,8 @@ function OptionsIndex() {
                                 <HelpCircle size={14} /> {t("options.obsidianGuide.title")}
                               </button>
                               {showObsidianHelp && (
-                                <>
-                                  <div className="fixed inset-0 z-40" onClick={() => setShowObsidianHelp(false)} />
-                                  <div className="absolute z-50 mt-2 w-[720px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowObsidianHelp(false)}>
+                                  <div onClick={(e) => e.stopPropagation()} className="w-[720px] max-w-[90vw] max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-5 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
                                     <p className="font-bold text-sm text-gray-900 dark:text-gray-100">{t("options.obsidianGuide.title")}</p>
                                     <p>{t("options.obsidianGuide.intro")}</p>
 
@@ -596,7 +594,7 @@ function OptionsIndex() {
                                     <p>{t("options.obsidianGuide.note")}</p>
                                     <p className="text-gray-500">{t("options.obsidianGuide.done")}</p>
                                   </div>
-                                </>
+                                </div>
                               )}
                             </div>
                             <div>
