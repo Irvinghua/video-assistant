@@ -5,14 +5,14 @@ import { useTranslation } from "../../i18n/useTranslation"
 import { ExportService, type TargetId } from "../../services/export/ExportService"
 import { buildNoteDocument, type NoteLabels } from "../../services/export/NoteBuilder"
 import { buildVideoUrl } from "../../services/export/buildVideoUrl"
+import { cacheService, cacheKeys } from "../../services/cache/CacheService"
+import type { SummaryResult, CommentAnalysis } from "../../services/ai/types"
 
 export function ExportMenu() {
-  const { cachedData, videoInfo, platform } = useVideo()
+  const { videoInfo, platform } = useVideo()
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [toast, setToast] = useState("")
-
-  const hasContent = !!(cachedData.summary || cachedData.comments || cachedData.mindmap)
 
   const labels: NoteLabels = {
     summarySection: t("exportMenu.labels.summarySection"),
@@ -41,7 +41,22 @@ export function ExportMenu() {
 
   const handle = async (id: TargetId) => {
     setOpen(false)
-    if (!hasContent || !videoInfo) {
+    if (!videoInfo) {
+      flash(t("exportMenu.empty"))
+      return
+    }
+    // Read the live cache rather than VideoContext.cachedData: cachedData is only
+    // populated on load, so freshly-generated content (written to cacheService by
+    // the panel hooks) would otherwise be missed.
+    const summaryKey = cacheKeys.summary(platform, videoInfo.id)
+    const commentsKey = cacheKeys.comments(platform, videoInfo.id)
+    const mindmapKey = cacheKeys.mindmap(platform, videoInfo.id)
+    const batch = await cacheService.getBatch([summaryKey, commentsKey, mindmapKey])
+    const summary = (batch[summaryKey] as SummaryResult) ?? null
+    const comments = (batch[commentsKey] as CommentAnalysis) ?? null
+    const mindmap = (batch[mindmapKey] as string) ?? null
+
+    if (!summary && !comments && !mindmap) {
       flash(t("exportMenu.empty"))
       return
     }
@@ -51,9 +66,9 @@ export function ExportMenu() {
       platform,
       author: videoInfo.author,
       exportedAt: new Date().toISOString().slice(0, 10),
-      summary: cachedData.summary,
-      comments: cachedData.comments,
-      mindmap: cachedData.mindmap,
+      summary,
+      comments,
+      mindmap,
       labels
     })
     try {
