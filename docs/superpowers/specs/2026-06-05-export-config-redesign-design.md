@@ -85,9 +85,12 @@ export interface EnsureResult {
 }
 
 // sections: 由 exportStructure 推导出的需要集合
+// onGenerate: 仅在“真正开始生成某章节”时触发（缓存未命中且前置就绪），供 UI 精确弹提示
 export async function ensureSections(
   sections: Set<"summary" | "comments" | "mindmap">,
-  inputs: SectionInputs
+  inputs: SectionInputs,
+  deps?: EnsureDeps,
+  onGenerate?: (section: "summary" | "comments" | "mindmap") => void
 ): Promise<EnsureResult>
 ```
 
@@ -102,6 +105,7 @@ export async function ensureSections(
 - 生成全部走 `AIServiceFactory.getService()`，需用户已配置 chat provider/API key；未配置 → 抛错 → ExportMenu toast "请先配置 AI 模型 / API Key"。
 - `ensureSections` 返回的 `missing` 非空时，ExportMenu toast 引导（如"视频无字幕，请先在总结面板用 ASR 生成总结"），并按"只导已生成的"继续导出可用章节（与 brainstorming"缺失章节"选项的精神一致：能补的补、补不了的提示并跳过）。
 - 抽取注意：`useMindMap` 当前把 mindmap 生成逻辑内联在 hook 里，需要将"script → markdown"的核心抽成 `src/services/export/`（或 `services/mindmap/`）下的纯函数，供 hook 与 provider 共用，避免逻辑重复。
+- **"正在生成"提示的准确性（修订 2026-06-05）**：`ensureSections` 通过 `onGenerate` 回调在**真正开始生成**某章节时才通知调用方；ExportMenu 据此弹"正在生成缺失章节"。**不再**在调用 `ensureSections` 前无条件弹该提示——否则当所选章节已全部缓存（无需生成）时也会误弹。
 
 ## 7. NoteBuilder 结构过滤
 

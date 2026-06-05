@@ -101,6 +101,8 @@ type RichText = { text: string; bold?: boolean }
 
 由 `toNotionBlocks` 从 `NoteDocument` 直接生成，支持：`heading_2/3`、`paragraph`、`bulleted_list_item`（含子项嵌套）、`bold` 注解。不支持的块类型降级为 paragraph。
 
+**嵌套深度上限（修订 2026-06-05）**：Notion API **单次请求最多允许 2 层嵌套子块**（顶层块 → 子 → 孙，孙必须是叶子；再深的 `children` 会被拒，返回 `400 validation_error`）。思维导图是 `#/##/###/-` 的深树，原样转换会超限导致整次导出失败（表现为「导出失败」）。因此 `toNotionBlocks` 把原生嵌套**封顶在 Notion 上限**（depth 0/1 原生嵌套，孙级为叶子）；更深的层级**拍平到孙级、并在文本前加缩进前缀**以保留层次可读性。Markdown/Obsidian 渲染无此限制，仅 Notion 渲染器需要。已用真机 Notion API 验证：拍平后的负载返回 200。
+
 ## 6. Obsidian 通路（剪贴板 + `obsidian://new?...&clipboard=true`）
 
 > **修订说明（2026-06-05）**：初版采用 `obsidian://new?...&content=<整篇markdown>` 的 URI 直写 + 8KB 长度回退。实测发现该方案不可靠——即便不足 2000 字的笔记，`content=` 编码后也会触碰 OS/URL 长度上限而失败。改为下述**剪贴板方案**：正文不进 URL，因此**无任何长度限制**。
