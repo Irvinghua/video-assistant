@@ -183,7 +183,7 @@
     "notionSuccess": "已导入 Notion",
     "obsidianInvoked": "已唤起 Obsidian",
     "downloaded": "已下载文件",
-    "fallbackDownloaded": "内容较长，已改为下载文件",
+    "fallbackDownloaded": "剪贴板不可用，已改为下载文件",
     "errorUnauthorized": "Notion Token 无效",
     "errorParentNotFound": "未找到父页面，请确认已把页面分享给 integration",
     "errorRateLimited": "Notion 请求过于频繁，请稍后重试",

@@ -1,28 +1,24 @@
 import { describe, it, expect } from "vitest"
-import { buildObsidianRequest, OBSIDIAN_MAX_CONTENT } from "./ObsidianTarget"
+import { buildObsidianUri } from "./ObsidianTarget"
 
-it("builds an obsidian://new uri for short content", () => {
-  const req = buildObsidianRequest({ vault: "MyVault", folder: "Videos", title: "标题", markdown: "# hi" })
-  expect(req.action).toBe("uri")
-  if (req.action !== "uri") throw new Error("expected uri")
-  expect(req.url).toContain("obsidian://new?")
-  expect(req.url).toContain("vault=MyVault")
-  expect(req.url).toContain("file=Videos%2F%E6%A0%87%E9%A2%98")
-  expect(req.url).toContain("content=")
-})
+describe("buildObsidianUri", () => {
+  it("builds a short clipboard-based obsidian://new uri without inline content", () => {
+    const url = buildObsidianUri("MyVault", "Videos", "标题")
+    expect(url).toContain("obsidian://new?")
+    expect(url).toContain("vault=MyVault")
+    expect(url).toContain("file=Videos%2F%E6%A0%87%E9%A2%98")
+    expect(url).toContain("clipboard=true")
+    expect(url).not.toContain("content=")
+  })
 
-it("omits folder prefix when folder empty and sanitizes title", () => {
-  const req = buildObsidianRequest({ vault: "V", folder: "", title: "a/b:c", markdown: "x" })
-  if (req.action !== "uri") throw new Error("expected uri")
-  expect(req.url).toContain("file=a-b-c")
-  expect(req.url).not.toContain("%2F")
-})
+  it("omits folder prefix when folder empty and sanitizes the title", () => {
+    const url = buildObsidianUri("V", "", "a/b:c")
+    expect(url).toContain("file=a-b-c")
+    expect(url).not.toContain("%2F")
+  })
 
-it("falls back when content exceeds the limit", () => {
-  const big = "x".repeat(OBSIDIAN_MAX_CONTENT + 1)
-  const req = buildObsidianRequest({ vault: "V", folder: "", title: "t", markdown: big })
-  expect(req.action).toBe("fallback")
-  if (req.action !== "fallback") throw new Error("expected fallback")
-  expect(req.filename).toBe("t.md")
-  expect(req.markdown).toBe(big)
+  it("encodes vault names with spaces", () => {
+    const url = buildObsidianUri("My Notes", "", "t")
+    expect(url).toContain("vault=My%20Notes")
+  })
 })

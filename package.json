@@ -46,7 +46,8 @@
     "permissions": [
       "storage",
       "cookies",
-      "scripting"
+      "scripting",
+      "clipboardWrite"
     ],
     "host_permissions": [
       "https://*/*"
