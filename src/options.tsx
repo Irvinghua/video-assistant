@@ -134,6 +134,8 @@ function OptionsIndex() {
     const [notionParentPageId, setNotionParentPageId] = useState("")
     const [obsidianVault, setObsidianVault] = useState("")
     const [obsidianFolder, setObsidianFolder] = useState("")
+    const [exportTarget, setExportTarget] = useState<"notion" | "obsidian">("notion")
+    const [exportStructure, setExportStructure] = useState("summary")
     const [status, setStatus] = useState("")
     const [cacheCleared, setCacheCleared] = useState(false)
 
@@ -185,6 +187,8 @@ function OptionsIndex() {
         const notionParent = await storage.get("notionParentPageId") || ""
         const obsidian = await storage.get("obsidianVault") || ""
         const obsidianFld = await storage.get("obsidianFolder") || ""
+        const eTarget = (await storage.get("exportTarget")) || "notion"
+        const eStructure = (await storage.get("exportStructure")) || "summary"
 
         setChatProvider(cProvider)
         setChatModel(cModel)
@@ -199,6 +203,8 @@ function OptionsIndex() {
         setNotionParentPageId(notionParent)
         setObsidianVault(obsidian)
         setObsidianFolder(obsidianFld)
+        setExportTarget(eTarget as "notion" | "obsidian")
+        setExportStructure(eStructure)
     }
 
     const handleSave = async () => {
@@ -215,6 +221,8 @@ function OptionsIndex() {
         await storage.set("notionParentPageId", notionParentPageId)
         await storage.set("obsidianVault", obsidianVault)
         await storage.set("obsidianFolder", obsidianFolder)
+        await storage.set("exportTarget", exportTarget)
+        await storage.set("exportStructure", exportStructure)
         setStatus(t("options.savedToast"))
         setTimeout(() => setStatus(""), 2000)
     }
@@ -480,48 +488,66 @@ function OptionsIndex() {
                     </h2>
 
                     <div className="space-y-4">
+                        {/* 导出目标 */}
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionToken")}</label>
-                            <input
-                                type="password"
-                                value={notionToken}
-                                onChange={(e) => setNotionToken(e.target.value)}
-                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder={t("options.placeholders.notionToken")}
-                            />
+                          <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.exportTarget")}</label>
+                          <select
+                            value={exportTarget}
+                            onChange={(e) => setExportTarget(e.target.value as "notion" | "obsidian")}
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          >
+                            <option value="notion">{t("options.exportTargets.notion")}</option>
+                            <option value="obsidian">{t("options.exportTargets.obsidian")}</option>
+                          </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionParentPageId")}</label>
-                            <input
-                                type="text"
-                                value={notionParentPageId}
-                                onChange={(e) => setNotionParentPageId(e.target.value)}
+                        {exportTarget === "notion" && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionToken")}</label>
+                              <input type="password" value={notionToken} onChange={(e) => setNotionToken(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder={t("options.placeholders.notionParentPageId")}
-                            />
-                        </div>
+                                placeholder={t("options.placeholders.notionToken")} />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionParentPageId")}</label>
+                              <input type="text" value={notionParentPageId} onChange={(e) => setNotionParentPageId(e.target.value)}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder={t("options.placeholders.notionParentPageId")} />
+                            </div>
+                          </>
+                        )}
 
-                        <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianVault")}</label>
-                            <input
-                                type="text"
-                                value={obsidianVault}
-                                onChange={(e) => setObsidianVault(e.target.value)}
+                        {exportTarget === "obsidian" && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianVault")}</label>
+                              <input type="text" value={obsidianVault} onChange={(e) => setObsidianVault(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder={t("options.placeholders.obsidianVault")}
-                            />
-                        </div>
+                                placeholder={t("options.placeholders.obsidianVault")} />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianFolder")}</label>
+                              <input type="text" value={obsidianFolder} onChange={(e) => setObsidianFolder(e.target.value)}
+                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder={t("options.placeholders.obsidianFolder")} />
+                            </div>
+                          </>
+                        )}
 
+                        {/* 导出结构 */}
                         <div>
-                            <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianFolder")}</label>
-                            <input
-                                type="text"
-                                value={obsidianFolder}
-                                onChange={(e) => setObsidianFolder(e.target.value)}
-                                className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder={t("options.placeholders.obsidianFolder")}
-                            />
+                          <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.exportStructure")}</label>
+                          <select
+                            value={exportStructure}
+                            onChange={(e) => setExportStructure(e.target.value)}
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          >
+                            <option value="summary">{t("options.exportStructures.summary")}</option>
+                            <option value="summary_comments">{t("options.exportStructures.summary_comments")}</option>
+                            <option value="summary_mindmap">{t("options.exportStructures.summary_mindmap")}</option>
+                            <option value="summary_comments_mindmap">{t("options.exportStructures.summary_comments_mindmap")}</option>
+                          </select>
                         </div>
                     </div>
                 </section>
