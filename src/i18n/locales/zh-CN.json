@@ -199,7 +199,8 @@
       "howBody": "点「导入到 Obsidian」时，插件把笔记全文复制到剪贴板，并用 obsidian://new?...&clipboard=true 唤起 Obsidian，自动新建并填充笔记（所以没有长度限制）。",
       "note": "❗ 需先安装 Obsidian 桌面端；Vault 名称填错会唤起失败或写到别的库。",
       "done": "完成后点「保存全部设置」，到视频侧边栏点「导入到 Obsidian」即可。"
-    }
+    },
+    "keySafetyHint": "（所有 Key 仅保存在本地浏览器中，不会上传到服务器中！请注意安全保管！）"
   },
   "exportTargets": {
     "notion": "Notion",

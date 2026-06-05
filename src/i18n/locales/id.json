@@ -199,7 +199,8 @@
       "howBody": "“Send to Obsidian” copies the full note to your clipboard and opens obsidian://new?...&clipboard=true so Obsidian creates and fills the note automatically (so there is no length limit).",
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
-    }
+    },
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
   },
   "exportTargets": {
     "notion": "Notion",

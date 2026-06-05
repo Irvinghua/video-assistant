@@ -370,6 +370,7 @@ function OptionsIndex() {
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                                 placeholder={t("options.placeholders.chatApiKey", { provider: chatProvider })}
                             />
+                            <p className="text-xs text-amber-600 dark:text-amber-500 mt-1.5">{t("options.keySafetyHint")}</p>
                         </div>
 
                         <div className="mt-2 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
@@ -448,6 +449,7 @@ function OptionsIndex() {
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                                 placeholder={t("options.placeholders.asrApiKey", { provider: asrProvider })}
                             />
+                            <p className="text-xs text-amber-600 dark:text-amber-500 mt-1.5">{t("options.keySafetyHint")}</p>
                         </div>
 
                         <div className="mt-2 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
@@ -556,6 +558,7 @@ function OptionsIndex() {
                               <input type="password" value={notionToken} onChange={(e) => setNotionToken(e.target.value)}
                                 className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 placeholder={t("options.placeholders.notionToken")} />
+                              <p className="text-xs text-amber-600 dark:text-amber-500 mt-1.5">{t("options.keySafetyHint")}</p>
                             </div>
                             <div>
                               <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionParentPageId")}</label>
