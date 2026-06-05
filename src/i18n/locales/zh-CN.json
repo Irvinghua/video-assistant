@@ -175,7 +175,19 @@
     },
     "saveBtn": "保存全部设置",
     "configPrompt": "请先配置个人 {{target}} 导入信息",
-    "configPromptOk": "知道了"
+    "configPromptOk": "知道了",
+    "notionGuide": {
+      "title": "如何配置 Notion 导入",
+      "intro": "共 3 步，把 Token 和父页面 ID 两个值填进上方输入框即可。",
+      "step1Title": "第 1 步 · 创建集成，拿 Token",
+      "step1Body": "1. 打开下方链接（需用 Workspace 所有者账号登录）\n2. 点「+ New connection」，填名字、类型选 Internal，创建\n3. 创建后点该集成「•••」→ 复制「Internal Integration Secret」\n4. 这串以 ntn_ 开头的长字符就是 Token，填进上面第一个框\n⚠️ 别把集成的名字当成 token，要复制 ntn_… 那串密钥",
+      "step2Title": "第 2 步 · 拿父页面 ID",
+      "step2Body": "1. 在 Notion 新建一个页面当笔记归档处\n2. 打开它 → 右上「•••」→ Copy link\n3. 链接末尾那串 32 位字符就是父页面 ID，填进第二个框",
+      "exampleLabel": "链接示例（加粗部分就是 ID）：",
+      "step3Title": "第 3 步 · 把页面授权给集成（最关键，最易漏）",
+      "step3Body": "1. 打开父页面 → 右上「•••」→ Connections → + Add connections\n2. 选中你刚建的集成，确认\n❗ 不做这步导出会报「未找到父页面」（集成默认看不到你的页面）",
+      "done": "完成后点「保存全部设置」，到视频侧边栏点「导入到 Notion」即可。"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

@@ -175,7 +175,19 @@
     },
     "saveBtn": "Simpan Semua Pengaturan",
     "configPrompt": "Please configure your {{target}} import settings first",
-    "configPromptOk": "Got it"
+    "configPromptOk": "Got it",
+    "notionGuide": {
+      "title": "How to set up Notion import",
+      "intro": "3 steps — paste the Token and Parent Page ID into the two fields above.",
+      "step1Title": "Step 1 · Create an integration, get the Token",
+      "step1Body": "1. Open the link below (sign in as a Workspace owner)\n2. Click “+ New connection”, name it, choose Internal, create\n3. Open the integration’s “•••” → copy the “Internal Integration Secret”\n4. That long string starting with ntn_ is your Token — paste into the first field\n⚠️ Don’t paste the integration’s name; copy the ntn_… secret",
+      "step2Title": "Step 2 · Get the Parent Page ID",
+      "step2Body": "1. Create a Notion page to hold the notes\n2. Open it → top-right “•••” → Copy link\n3. The 32-char string at the end of the link is the Parent Page ID — paste into the second field",
+      "exampleLabel": "Example link (the bold part is the ID):",
+      "step3Title": "Step 3 · Share the page with the integration (crucial, often missed)",
+      "step3Body": "1. Open the parent page → top-right “•••” → Connections → + Add connections\n2. Select the integration you created, confirm\n❗ Skip this and export fails with “parent page not found” (the integration can’t see your pages by default)",
+      "done": "Then click “Save all settings” and use “Send to Notion” in the video sidebar."
+    }
   },
   "exportTargets": {
     "notion": "Notion",

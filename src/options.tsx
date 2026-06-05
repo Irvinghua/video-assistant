@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react"
 import { Storage } from "@plasmohq/storage"
-import { Trash2, Save, CheckCircle } from "lucide-react"
+import { Trash2, Save, CheckCircle, HelpCircle } from "lucide-react"
 import { cacheService } from "./services/cache/CacheService"
 import { I18nProvider } from "./i18n/I18nProvider"
 import { useTranslation } from "./i18n/useTranslation"
@@ -137,6 +137,7 @@ function OptionsIndex() {
     const [exportTarget, setExportTarget] = useState<"notion" | "obsidian">("notion")
     const [exportStructure, setExportStructure] = useState("summary")
     const [configPrompt, setConfigPrompt] = useState<"notion" | "obsidian" | null>(null)
+    const [showNotionHelp, setShowNotionHelp] = useState(false)
     const exportSectionRef = useRef<HTMLElement>(null)
     const [status, setStatus] = useState("")
     const [cacheCleared, setCacheCleared] = useState(false)
@@ -518,6 +519,38 @@ function OptionsIndex() {
 
                         {exportTarget === "notion" && (
                           <>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowNotionHelp(v => !v)}
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                <HelpCircle size={14} /> {t("options.notionGuide.title")}
+                              </button>
+                              {showNotionHelp && (
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={() => setShowNotionHelp(false)} />
+                                  <div className="absolute z-50 mt-2 w-[360px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
+                                    <p className="font-bold text-sm text-gray-900 dark:text-gray-100">{t("options.notionGuide.title")}</p>
+                                    <p>{t("options.notionGuide.intro")}</p>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.notionGuide.step1Title")}</p>
+                                    <p className="whitespace-pre-line">{t("options.notionGuide.step1Body")}</p>
+                                    <a href="https://app.notion.com/developers/connections" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline break-all">https://app.notion.com/developers/connections</a>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.notionGuide.step2Title")}</p>
+                                    <p className="whitespace-pre-line">{t("options.notionGuide.step2Body")}</p>
+                                    <p className="text-gray-500">{t("options.notionGuide.exampleLabel")}</p>
+                                    <p className="break-all font-mono text-[11px]">https://app.notion.com/p/Video-Assistant-<span className="font-bold text-blue-600 dark:text-blue-400">376bb287dd2980029ef2fffc970353c0</span></p>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.notionGuide.step3Title")}</p>
+                                    <p className="whitespace-pre-line">{t("options.notionGuide.step3Body")}</p>
+
+                                    <p className="text-gray-500">{t("options.notionGuide.done")}</p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                             <div>
                               <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.notionToken")}</label>
                               <input type="password" value={notionToken} onChange={(e) => setNotionToken(e.target.value)}
