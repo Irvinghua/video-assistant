@@ -187,6 +187,18 @@
       "step3Title": "第 3 步 · 把页面授权给集成（最关键，最易漏）",
       "step3Body": "1. 打开父页面 → 右上「•••」→ Connections → + Add connections\n2. 选中你刚建的集成，确认\n❗ 不做这步导出会报「未找到父页面」（集成默认看不到你的页面）",
       "done": "完成后点「保存全部设置」，到视频侧边栏点「导入到 Notion」即可。"
+    },
+    "obsidianGuide": {
+      "title": "如何配置 Obsidian 导入",
+      "intro": "Obsidian 无需 token，只要填对 Vault 名称即可。",
+      "step1Title": "第 1 步 · 填 Vault 名称",
+      "step1Body": "1. Vault 名称 = 你在 Obsidian 里看到的库名（左下角库切换处，或库文件夹名）\n2. 必须与真实库名完全一致（区分大小写）\n3. 填进上面「Obsidian Vault 名称」框",
+      "step2Title": "第 2 步 · 目标文件夹（可选）",
+      "step2Body": "1. 想把笔记放进库内某个文件夹，就填相对路径，如 Clippings/Videos\n2. 留空则存到库根目录\n3. 文件夹不存在时 Obsidian 会自动创建",
+      "howTitle": "导出原理",
+      "howBody": "点「导入到 Obsidian」时，插件把笔记全文复制到剪贴板，并用 obsidian://new?...&clipboard=true 唤起 Obsidian，自动新建并填充笔记（所以没有长度限制）。",
+      "note": "❗ 需先安装 Obsidian 桌面端；Vault 名称填错会唤起失败或写到别的库。",
+      "done": "完成后点「保存全部设置」，到视频侧边栏点「导入到 Obsidian」即可。"
     }
   },
   "exportTargets": {

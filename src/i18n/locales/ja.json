@@ -187,6 +187,18 @@
       "step3Title": "Step 3 · Share the page with the integration (crucial, often missed)",
       "step3Body": "1. Open the parent page → top-right “•••” → Connections → + Add connections\n2. Select the integration you created, confirm\n❗ Skip this and export fails with “parent page not found” (the integration can’t see your pages by default)",
       "done": "Then click “Save all settings” and use “Send to Notion” in the video sidebar."
+    },
+    "obsidianGuide": {
+      "title": "How to set up Obsidian import",
+      "intro": "Obsidian needs no token — just the correct Vault name.",
+      "step1Title": "Step 1 · Vault name",
+      "step1Body": "1. The Vault name is the library name shown in Obsidian (bottom-left vault switcher, or the vault folder name)\n2. It must match exactly (case-sensitive)\n3. Paste it into the “Obsidian Vault Name” field above",
+      "step2Title": "Step 2 · Target folder (optional)",
+      "step2Body": "1. To place notes in a sub-folder, enter a relative path like Clippings/Videos\n2. Leave empty to save at the vault root\n3. Obsidian creates the folder if it does not exist",
+      "howTitle": "How export works",
+      "howBody": "“Send to Obsidian” copies the full note to your clipboard and opens obsidian://new?...&clipboard=true so Obsidian creates and fills the note automatically (so there is no length limit).",
+      "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
+      "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     }
   },
   "exportTargets": {

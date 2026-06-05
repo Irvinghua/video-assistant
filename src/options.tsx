@@ -138,6 +138,7 @@ function OptionsIndex() {
     const [exportStructure, setExportStructure] = useState("summary")
     const [configPrompt, setConfigPrompt] = useState<"notion" | "obsidian" | null>(null)
     const [showNotionHelp, setShowNotionHelp] = useState(false)
+    const [showObsidianHelp, setShowObsidianHelp] = useState(false)
     const exportSectionRef = useRef<HTMLElement>(null)
     const [status, setStatus] = useState("")
     const [cacheCleared, setCacheCleared] = useState(false)
@@ -530,7 +531,7 @@ function OptionsIndex() {
                               {showNotionHelp && (
                                 <>
                                   <div className="fixed inset-0 z-40" onClick={() => setShowNotionHelp(false)} />
-                                  <div className="absolute z-50 mt-2 w-[360px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
+                                  <div className="absolute z-50 mt-2 w-[720px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
                                     <p className="font-bold text-sm text-gray-900 dark:text-gray-100">{t("options.notionGuide.title")}</p>
                                     <p>{t("options.notionGuide.intro")}</p>
 
@@ -568,6 +569,36 @@ function OptionsIndex() {
 
                         {exportTarget === "obsidian" && (
                           <>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setShowObsidianHelp(v => !v)}
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                <HelpCircle size={14} /> {t("options.obsidianGuide.title")}
+                              </button>
+                              {showObsidianHelp && (
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={() => setShowObsidianHelp(false)} />
+                                  <div className="absolute z-50 mt-2 w-[720px] max-w-[90vw] max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 space-y-3">
+                                    <p className="font-bold text-sm text-gray-900 dark:text-gray-100">{t("options.obsidianGuide.title")}</p>
+                                    <p>{t("options.obsidianGuide.intro")}</p>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.obsidianGuide.step1Title")}</p>
+                                    <p className="whitespace-pre-line">{t("options.obsidianGuide.step1Body")}</p>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.obsidianGuide.step2Title")}</p>
+                                    <p className="whitespace-pre-line">{t("options.obsidianGuide.step2Body")}</p>
+
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">{t("options.obsidianGuide.howTitle")}</p>
+                                    <p>{t("options.obsidianGuide.howBody")}</p>
+
+                                    <p>{t("options.obsidianGuide.note")}</p>
+                                    <p className="text-gray-500">{t("options.obsidianGuide.done")}</p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                             <div>
                               <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.obsidianVault")}</label>
                               <input type="text" value={obsidianVault} onChange={(e) => setObsidianVault(e.target.value)}
