@@ -35,6 +35,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true
     }
 
+    if (message.type === "CHECK_YOUTUBE_CAPTIONS_TRACKLIST") {
+        const tabId = sender.tab?.id
+        if (!tabId) {
+            sendResponse({ success: false })
+            return true
+        }
+        checkYouTubeCaptionsTracklist(tabId, sendResponse)
+        return true
+    }
+
     if (message.type === "FETCH_YOUTUBE_SUBTITLES") {
         const tabId = sender.tab?.id
         if (!tabId) {
@@ -55,6 +65,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true
     }
 
+    if (message.type === "READ_DOUYIN_PLAYER") {
+        handleReadDouyinPlayer(message.videoId, sender.tab?.id, sendResponse)
+        return true
+    }
+
+    if (message.type === "DOUYIN_PLAYER_SEEK") {
+        handleDouyinSeek(message.seconds, sender.tab?.id, sendResponse)
+        return true
+    }
+
     if (message.type === "OPEN_OPTIONS_PAGE") {
         chrome.runtime.openOptionsPage(() => {
             const err = chrome.runtime.lastError
@@ -63,6 +83,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true
     }
 })
+
+// ─── Fast CC presence check: read the player's caption tracklist ───
+// Lets the caller skip the slow toggle+intercept path (and its 20s timeout)
+// when a video simply has no captions. Language-independent: reads the player
+// API + the structured-description transcript section, never button text.
+async function checkYouTubeCaptionsTracklist(tabId: number, sendResponse: (r: any) => void) {
+    try {
+        const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            world: "MAIN",
+            func: () => {
+                return new Promise<{ hasCC: boolean }>((resolve) => {
+                    const mp = document.getElementById("movie_player") as any
+                    if (!mp || !mp.getOption) { resolve({ hasCC: false }); return }
+                    // Caption module is lazy-loaded; nudge it so the tracklist populates.
+                    try { mp.loadModule && mp.loadModule("captions") } catch { }
+                    const t0 = Date.now()
+                    const check = () => {
+                        let list: any = null
+                        try { list = mp.getOption("captions", "tracklist") } catch { }
+                        // Secondary language-independent positive signals (structured
+                        // description transcript section / its engagement panel).
+                        const section = !!document.querySelector("ytd-video-description-transcript-section-renderer")
+                            || !!document.querySelector('[target-id="engagement-panel-searchable-transcript"]')
+                        if ((Array.isArray(list) && list.length > 0) || section) { resolve({ hasCC: true }); return }
+                        // Give the lazy module up to 4s to report tracks before concluding "none".
+                        if (Date.now() - t0 > 4000) { resolve({ hasCC: false }); return }
+                        setTimeout(check, 300)
+                    }
+                    check()
+                })
+            }
+        })
+        const r = results?.[0]?.result as { hasCC: boolean } | undefined
+        sendResponse({ success: true, hasCC: !!r?.hasCC })
+    } catch (e) {
+        sendResponse({ success: false })
+    }
+}
 
 // ─── Check if subtitle data was already captured (fast path) ───
 
@@ -135,44 +194,20 @@ async function handleYouTubeSubtitles(videoId: string, tabId: number, sendRespon
                     }
                 }
 
-                // Toggle subtitles to trigger the timedtext XHR.
-                // On first sidebar open, YouTube's caption module is lazy-loaded
-                // and toggleSubtitles() can be a no-op. Explicitly loadModule
-                // first and wait for the tracklist to appear before toggling.
+                // Toggle subtitles to trigger the timedtext XHR. The caller
+                // (hasCaptions) has already confirmed the caption module is
+                // loaded and the tracklist is populated before reaching here,
+                // so we can toggle directly without re-polling for readiness.
                 const mp = document.getElementById("movie_player") as any
                 if (mp?.toggleSubtitles) {
-                    const doToggle = () => {
-                        const wasOn = mp.isSubtitlesOn?.()
-                        if (wasOn) {
-                            mp.toggleSubtitles()
-                            setTimeout(() => mp.toggleSubtitles(), 250)
-                        } else {
-                            mp.toggleSubtitles()
-                            setTimeout(() => { if (mp.isSubtitlesOn?.()) mp.toggleSubtitles() }, 4000)
-                        }
-                    }
-
                     try { mp.loadModule?.("captions") } catch { }
-
-                    const tracklistReady = () => {
-                        try {
-                            const list = mp.getOption?.("captions", "tracklist")
-                            return Array.isArray(list) && list.length > 0
-                        } catch { return false }
-                    }
-
-                    if (tracklistReady()) {
-                        doToggle()
+                    const wasOn = mp.isSubtitlesOn?.()
+                    if (wasOn) {
+                        mp.toggleSubtitles()
+                        setTimeout(() => mp.toggleSubtitles(), 250)
                     } else {
-                        // Poll up to 4s; toggle as soon as the module reports a tracklist,
-                        // or unconditionally at the deadline to preserve old behavior.
-                        const deadline = Date.now() + 4000
-                        const iv = setInterval(() => {
-                            if (tracklistReady() || Date.now() >= deadline) {
-                                clearInterval(iv)
-                                doToggle()
-                            }
-                        }, 200)
+                        mp.toggleSubtitles()
+                        setTimeout(() => { if (mp.isSubtitlesOn?.()) mp.toggleSubtitles() }, 4000)
                     }
                 }
             },
@@ -594,5 +629,63 @@ async function decryptStreamUrl(
     } catch (e) {
         console.error("[VA-BG] decryptStreamUrl executeScript error:", e)
         return null
+    }
+}
+
+// ─── Douyin: read window.player.config.awemeInfo (MAIN world) ───
+
+async function handleReadDouyinPlayer(
+    videoId: string,
+    tabId: number | undefined,
+    sendResponse: (r: any) => void
+) {
+    if (!tabId) { sendResponse({ ok: false, reason: "no-tab" }); return }
+    try {
+        const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            world: "MAIN",
+            func: (wantId: string) => {
+                const p: any = (window as any).player
+                const a = p?.config?.awemeInfo
+                if (!a) return { ok: false, reason: "no-player" }
+                // swiper preloads multiple instances — verify this player is the wanted video
+                if (wantId && a.awemeId !== wantId) return { ok: false, reason: "id-mismatch" }
+                const v = a.video || {}
+                const cover = (v.coverUrlList && v.coverUrlList[0]) || ""
+                return {
+                    ok: true,
+                    awemeId: a.awemeId,
+                    desc: a.desc || "",
+                    author: a.authorInfo?.nickname || a.authorInfo?.nickName || "",
+                    cover,
+                    video: { bitRateAudioList: v.bitRateAudioList || [], playAddr: v.playAddr || null }
+                }
+            },
+            args: [videoId || ""]
+        })
+        sendResponse(results?.[0]?.result || { ok: false, reason: "no-result" })
+    } catch (e) {
+        sendResponse({ ok: false, reason: String(e) })
+    }
+}
+
+async function handleDouyinSeek(
+    seconds: number,
+    tabId: number | undefined,
+    sendResponse: (r: any) => void
+) {
+    if (!tabId) { sendResponse({ ok: false }); return }
+    try {
+        await chrome.scripting.executeScript({
+            target: { tabId },
+            world: "MAIN",
+            func: (sec: number) => {
+                try { const p: any = (window as any).player; p?.seek?.(sec); p?.play?.() } catch { }
+            },
+            args: [seconds]
+        })
+        sendResponse({ ok: true })
+    } catch {
+        sendResponse({ ok: false })
     }
 }
