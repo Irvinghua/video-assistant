@@ -58,15 +58,22 @@ export class VideoSummarizer {
         }).join("\n")
 
         const chunks = chunkText(textWithTime, 3000)
-        console.log(`[VideoSummarizer] Summarizing ${chunks.length} chunks...`)
 
-        const chunkSummaries = await Promise.all(
-            chunks.map((chunk, index) =>
-                aiService.chat([{ role: "user", content: Prompts.chunkSummary(chunk, index, language) }])
+        // Single chunk: the timestamped transcript is short enough to feed the
+        // final pass directly. The intermediate per-chunk summary would only add
+        // a redundant full AI round-trip (the dominant cost), so skip it.
+        let combinedSummary: string
+        if (chunks.length === 1) {
+            combinedSummary = chunks[0]
+        } else {
+            const chunkSummaries = await Promise.all(
+                chunks.map((chunk, index) =>
+                    aiService.chat([{ role: "user", content: Prompts.chunkSummary(chunk, index, language) }])
+                )
             )
-        )
+            combinedSummary = chunkSummaries.join("\n\n---\n\n")
+        }
 
-        const combinedSummary = chunkSummaries.join("\n\n---\n\n")
         const response = await aiService.chat([
             { role: "user", content: Prompts.finalSummary(combinedSummary, language) }
         ])

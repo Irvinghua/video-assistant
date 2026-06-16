@@ -1,6 +1,7 @@
 import type { IPlatformService, VideoInfo, SubtitleSegment, SampledComments } from "../types"
 import { extractAwemeId } from "./awemeId"
 import { getCachedAweme, loadAweme, douyinSeek } from "./playerBridge"
+import { getDouyinComments } from "./commentFetcher"
 
 export class DouyinService implements IPlatformService {
     getPlatformName(): string {
@@ -31,9 +32,10 @@ export class DouyinService implements IPlatformService {
         return []
     }
 
-    // Comment DOM scraping is deferred to a separate plan; return empty for now.
-    async getComments(): Promise<SampledComments> {
-        return { consensus: [], controversial: [] }
+    // Douyin's comment API is signature-guarded, so comments are scraped from
+    // the rendered DOM (the panel is opened and lazy-scrolled by the fetcher).
+    async getComments(videoId: string): Promise<SampledComments> {
+        return getDouyinComments(videoId)
     }
 
     supportsDigitalASR(): boolean {
