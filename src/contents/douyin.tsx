@@ -48,15 +48,25 @@ const service = new DouyinService()
 function useDouyinNavKey(): string {
     const [navKey, setNavKey] = useState("")
     useEffect(() => {
-        let last = ""
+        let loadedId = ""   // id we have SUCCESSFULLY loaded into the cache
+        let inFlight = false
         let disposed = false
         const tick = async () => {
             const id = extractAwemeId(location.href) || ""
-            if (id === last) return
-            if (!id) { last = ""; if (!disposed) setNavKey(""); return }
-            last = id
-            await loadAweme(id)          // populate cache BEFORE re-detect
-            if (!disposed && last === id) setNavKey(id)
+            if (!id) {
+                if (loadedId) { loadedId = ""; if (!disposed) setNavKey("") }
+                return
+            }
+            if (id === loadedId || inFlight) return
+            inFlight = true
+            try {
+                // May fail with "no-player" if xgplayer isn't initialized yet;
+                // leave loadedId unchanged so a later tick retries.
+                const aweme = await loadAweme(id)
+                if (aweme && !disposed) { loadedId = id; setNavKey(id) }
+            } finally {
+                inFlight = false
+            }
         }
         const origPush = history.pushState
         const origReplace = history.replaceState
