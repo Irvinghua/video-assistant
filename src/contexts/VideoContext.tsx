@@ -37,10 +37,11 @@ export function useVideo(): VideoContextValue {
 interface VideoProviderProps {
     service: IPlatformService
     isOpen: boolean
+    navKey?: string | number
     children: ReactNode
 }
 
-export function VideoProvider({ service, isOpen, children }: VideoProviderProps) {
+export function VideoProvider({ service, isOpen, navKey, children }: VideoProviderProps) {
     const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null)
     const [subtitles, setSubtitles] = useState<SubtitleSegment[]>([])
     const [sampledComments, setSampledComments] = useState<SampledComments | null>(null)
@@ -141,7 +142,7 @@ export function VideoProvider({ service, isOpen, children }: VideoProviderProps)
             }
             loadData(info.id)
         }
-    }, [isOpen, service, videoInfo?.id])
+    }, [isOpen, service, videoInfo?.id, navKey])
 
     // Listen for CACHE_CLEARED to reset
     useEffect(() => {

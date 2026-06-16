@@ -14,6 +14,7 @@ import { ExportMenu } from "./ExportMenu"
 interface Props {
     service: IPlatformService
     isOpen: boolean
+    navKey?: string | number
     onClose: () => void
 }
 
@@ -68,7 +69,7 @@ function SidebarContent({ activeTab, setActiveTab, onClose }: {
     )
 }
 
-export function Sidebar({ service, isOpen, onClose }: Props) {
+export function Sidebar({ service, isOpen, navKey, onClose }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>("summary")
 
     return (
@@ -81,7 +82,7 @@ export function Sidebar({ service, isOpen, onClose }: Props) {
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
                     className="fixed right-0 top-0 h-full w-[400px] bg-white dark:bg-gray-900 shadow-2xl z-40 flex flex-col border-l dark:border-gray-800"
                 >
-                    <VideoProvider service={service} isOpen={isOpen}>
+                    <VideoProvider service={service} isOpen={isOpen} navKey={navKey}>
                         <SidebarContent activeTab={activeTab} setActiveTab={setActiveTab} onClose={onClose} />
                     </VideoProvider>
                 </motion.div>
