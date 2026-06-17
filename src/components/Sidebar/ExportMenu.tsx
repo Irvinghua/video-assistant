@@ -8,7 +8,7 @@ import { DownloadTarget } from "../../services/export/targets/DownloadTarget"
 import { buildNoteDocument, type NoteLabels } from "../../services/export/NoteBuilder"
 import { buildVideoUrl } from "../../services/export/buildVideoUrl"
 import { ensureSections } from "../../services/export/ExportContentProvider"
-import { structureToSections, type ExportStructure } from "../../services/export/exportStructure"
+import { parseSections } from "../../services/export/exportStructure"
 
 const storage = new Storage()
 
@@ -20,6 +20,7 @@ export function ExportMenu() {
   const toastTimer = useRef<ReturnType<typeof setTimeout>>()
 
   const labels: NoteLabels = {
+    transcriptSection: t("exportMenu.labels.transcriptSection"),
     summarySection: t("exportMenu.labels.summarySection"),
     commentsSection: t("exportMenu.labels.commentsSection"),
     mindmapSection: t("exportMenu.labels.mindmapSection"),
@@ -62,8 +63,10 @@ export function ExportMenu() {
       }
     }
 
-    const structure = ((await storage.get("exportStructure")) || "summary") as ExportStructure
-    const sections = structureToSections(structure)
+    const sections = new Set(parseSections(
+      await storage.get("exportSections"),
+      await storage.get("exportStructure")
+    ))
     let ensured
     try {
       ensured = await ensureSections(
@@ -78,10 +81,11 @@ export function ExportMenu() {
       return
     }
 
+    const transcript = sections.has("transcript") ? ensured.transcript : null
     const summary = sections.has("summary") ? ensured.summary : null
     const comments = sections.has("comments") ? ensured.comments : null
     const mindmap = sections.has("mindmap") ? ensured.mindmap : null
-    if (!summary && !comments && !mindmap) {
+    if (!transcript && !summary && !comments && !mindmap) {
       flash(t("exportMenu.empty"))
       return
     }
@@ -92,6 +96,7 @@ export function ExportMenu() {
       platform,
       author: videoInfo.author,
       exportedAt: new Date().toISOString().slice(0, 10),
+      transcript,
       summary,
       comments,
       mindmap,

@@ -58,7 +58,7 @@ export class YouTubeService implements IPlatformService {
     }
 
     supportsDigitalASR(): boolean {
-        return true
+        return false
     }
 
     async getAudioUrl(videoId: string): Promise<string | null> {

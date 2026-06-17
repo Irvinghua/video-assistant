@@ -16,6 +16,7 @@ export interface SectionInputs {
 }
 
 export interface EnsureResult {
+  transcript: string | null
   summary: SummaryResult | null
   comments: CommentAnalysis | null
   mindmap: string | null
@@ -60,12 +61,20 @@ export async function ensureSections(
   onGenerate?: (section: Section) => void
 ): Promise<EnsureResult> {
   const { platform, videoId, language, subtitles, sampledComments } = inputs
-  const result: EnsureResult = { summary: null, comments: null, mindmap: null, missing: [] }
+  const result: EnsureResult = { transcript: null, summary: null, comments: null, mindmap: null, missing: [] }
 
+  // Plain script (timestamps stripped) — shared by transcript/comments/mindmap.
+  // Prefer the in-memory subtitles (the getSubtitles()/ASR result already loaded
+  // by VideoContext); fall back to the cached subtitles.
   let script: string | null = null
-  if (sections.has("comments") || sections.has("mindmap")) {
-    script = await deps.getScript(platform, videoId)
-    if (!script && subtitles.length) script = subtitles.map(s => s.text).join("\n")
+  if (sections.has("transcript") || sections.has("comments") || sections.has("mindmap")) {
+    if (subtitles.length) script = subtitles.map(s => s.text).join("\n")
+    if (!script) script = await deps.getScript(platform, videoId)
+  }
+
+  if (sections.has("transcript")) {
+    if (script) result.transcript = script
+    else result.missing.push("transcript")
   }
 
   if (sections.has("summary")) {

@@ -41,6 +41,7 @@
     "detectingDesc": "正在获取视频字幕信息",
     "noSubtitles": "未发现字幕",
     "noSubtitlesDesc": "提取数字音频并用 AI 处理？",
+    "asrUnsupported": "该视频没有字幕，当前平台暂不支持通过音频转写进行总结。",
     "summarizeViaAsr": "通过 ASR 总结",
     "subtitlesAvailable": "字幕可用",
     "subtitlesAvailableDesc": "已获取 {{count}} 行字幕（视频 {{id}}）。",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "仅视频总结",
-    "summary_comments": "视频总结 + 评论总结",
-    "summary_mindmap": "视频总结 + 思维导图",
-    "summary_comments_mindmap": "视频总结 + 评论总结 + 思维导图"
+  "exportSections": {
+    "transcript": "包含视频原稿",
+    "summary": "包含视频总结",
+    "comments": "包含评论总结",
+    "mindmap": "包含思维导图"
   },
   "exportMenu": {
     "button": "导出",
@@ -231,6 +232,7 @@
     "partialMissing": "部分章节缺少字幕或评论无法生成，已导出其余",
     "needAiConfig": "请先在设置中配置 AI 模型 / API Key",
     "labels": {
+      "transcriptSection": "视频原稿",
       "summarySection": "视频总结",
       "commentsSection": "舆情报告",
       "mindmapSection": "思维导图",

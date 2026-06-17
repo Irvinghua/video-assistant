@@ -1,7 +1,7 @@
 import type { CacheDataType, CacheEntry, ICacheService } from "./types"
 
 const DEFAULT_TTL = 3 * 24 * 60 * 60 // 3 days
-const CACHE_KEY_PATTERN = /^(youtube|bilibili):[^:]+:(summary|comments|subtitles|mindmap|sampledcomments)$/
+const CACHE_KEY_PATTERN = /^(youtube|bilibili|douyin):[^:]+:(summary|comments|subtitles|mindmap|sampledcomments)$/
 
 /** Typed wrappers to help TS pick the MV3 Promise overloads */
 const storageGetAll = () => chrome.storage.local.get(null as unknown as string) as Promise<Record<string, any>>
@@ -58,7 +58,7 @@ class CacheService implements ICacheService {
 
             const parts = key.split(":")
             const videoId = parts[1] || ""
-            const platform = (parts[0] || "youtube") as "bilibili" | "youtube"
+            const platform = (parts[0] || "youtube") as "bilibili" | "youtube" | "douyin"
             const dataType = (parts[2] as CacheDataType) || "summary"
 
             const now = Date.now()

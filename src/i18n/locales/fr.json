@@ -41,6 +41,7 @@
     "detectingDesc": "Récupération des sous-titres",
     "noSubtitles": "Aucun sous-titre trouvé",
     "noSubtitlesDesc": "Extraire l'audio numérique et utiliser l'IA ?",
+    "asrUnsupported": "Cette vidéo n'a pas de sous-titres et le résumé basé sur l'audio n'est pas encore pris en charge sur cette plateforme.",
     "summarizeViaAsr": "Résumer via ASR",
     "subtitlesAvailable": "Sous-titres disponibles",
     "subtitlesAvailableDesc": "Nous avons trouvé {{count}} lignes pour {{id}}.",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "Summary only",
-    "summary_comments": "Summary + Comments",
-    "summary_mindmap": "Summary + Mind map",
-    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  "exportSections": {
+    "transcript": "Inclure la transcription",
+    "summary": "Inclure le résumé",
+    "comments": "Inclure l'analyse des commentaires",
+    "mindmap": "Inclure la carte mentale"
   },
   "exportMenu": {
     "button": "Export",
@@ -231,6 +232,7 @@
     "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
     "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
+      "transcriptSection": "Transcription",
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
       "mindmapSection": "Mind Map",

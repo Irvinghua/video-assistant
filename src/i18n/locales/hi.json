@@ -41,6 +41,7 @@
     "detectingDesc": "वीडियो उपशीर्षक की जानकारी प्राप्त की जा रही है",
     "noSubtitles": "उपशीर्षक नहीं मिले",
     "noSubtitlesDesc": "डिजिटल ऑडियो निकालकर AI का उपयोग करें?",
+    "asrUnsupported": "इस वीडियो में सबटाइटल नहीं हैं, और इस प्लेटफ़ॉर्म पर ऑडियो-आधारित सारांश अभी समर्थित नहीं है।",
     "summarizeViaAsr": "ASR के द्वारा सारांश",
     "subtitlesAvailable": "उपशीर्षक उपलब्ध",
     "subtitlesAvailableDesc": "{{id}} के लिए {{count}} पंक्तियाँ मिलीं।",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "Summary only",
-    "summary_comments": "Summary + Comments",
-    "summary_mindmap": "Summary + Mind map",
-    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  "exportSections": {
+    "transcript": "ट्रांसक्रिप्ट शामिल करें",
+    "summary": "सारांश शामिल करें",
+    "comments": "टिप्पणी विश्लेषण शामिल करें",
+    "mindmap": "माइंड मैप शामिल करें"
   },
   "exportMenu": {
     "button": "Export",
@@ -231,6 +232,7 @@
     "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
     "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
+      "transcriptSection": "ट्रांसक्रिप्ट",
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
       "mindmapSection": "Mind Map",

@@ -3,6 +3,7 @@ import type { NoteDocument, NoteSection, NoteBlock } from "./NoteDocument"
 import { parseMindmap } from "./parseMindmap"
 
 export interface NoteLabels {
+  transcriptSection: string
   summarySection: string
   commentsSection: string
   mindmapSection: string
@@ -27,10 +28,31 @@ export interface BuildInput {
   platform: string
   author?: string
   exportedAt: string
+  transcript: string | null
   summary: SummaryResult | null
   comments: CommentAnalysis | null
   mindmap: string | null
   labels: NoteLabels
+}
+
+// Notion caps a single rich_text at 2000 chars; keep paragraphs comfortably
+// under that while still grouping consecutive transcript lines for readability.
+const TRANSCRIPT_PARAGRAPH_CAP = 1800
+
+function transcriptSection(text: string, l: NoteLabels): NoteSection {
+  const blocks: NoteBlock[] = []
+  let buf = ""
+  for (const line of text.split("\n")) {
+    const next = buf ? `${buf}\n${line}` : line
+    if (buf && next.length > TRANSCRIPT_PARAGRAPH_CAP) {
+      blocks.push({ kind: "paragraph", text: [{ text: buf }] })
+      buf = line
+    } else {
+      buf = next
+    }
+  }
+  if (buf) blocks.push({ kind: "paragraph", text: [{ text: buf }] })
+  return { heading: l.transcriptSection, blocks }
 }
 
 function fmtTime(seconds: number): string {
@@ -89,6 +111,7 @@ function commentsSection(a: CommentAnalysis, l: NoteLabels): NoteSection {
 export function buildNoteDocument(input: BuildInput): NoteDocument {
   const { labels: l } = input
   const sections: NoteSection[] = []
+  if (input.transcript && input.transcript.trim()) sections.push(transcriptSection(input.transcript, l))
   if (input.summary) sections.push(summarySection(input.summary, l))
   if (input.comments) sections.push(commentsSection(input.comments, l))
   if (input.mindmap && input.mindmap.trim()) {

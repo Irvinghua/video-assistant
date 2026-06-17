@@ -5,7 +5,7 @@ export interface CacheEntry<T> {
     data: T
     createdAt: number
     expiresAt: number
-    platform: "bilibili" | "youtube"
+    platform: "bilibili" | "youtube" | "douyin"
     videoId: string
     dataType: CacheDataType
 }

@@ -9,6 +9,7 @@ const summary: SummaryResult = {
 }
 
 const labels = {
+  transcriptSection: "视频原稿",
   summarySection: "视频总结",
   commentsSection: "舆情报告",
   mindmapSection: "思维导图",
@@ -34,6 +35,7 @@ it("includes only sections with content", () => {
     platform: "youtube",
     author: "UP",
     exportedAt: "2026-04-06",
+    transcript: null,
     summary,
     comments: null,
     mindmap: null,
@@ -48,7 +50,7 @@ it("includes only sections with content", () => {
 it("renders chapter timestamps as M:SS text", () => {
   const doc = buildNoteDocument({
     title: "t", sourceUrl: "u", platform: "youtube", exportedAt: "2026-04-06",
-    summary, comments: null, mindmap: null, labels
+    transcript: null, summary, comments: null, mindmap: null, labels
   })
   const summarySection = doc.sections[0]
   const bulletTexts = summarySection.blocks
@@ -67,7 +69,16 @@ it("adds comments and mindmap sections when present", () => {
   }
   const doc = buildNoteDocument({
     title: "t", sourceUrl: "u", platform: "bilibili", exportedAt: "2026-04-06",
-    summary: null, comments, mindmap: "# 根\n- 枝", labels
+    transcript: null, summary: null, comments, mindmap: "# 根\n- 枝", labels
   })
   expect(doc.sections.map(s => s.heading)).toEqual(["舆情报告", "思维导图"])
+})
+
+it("assembles transcript first, in canonical order", () => {
+  const doc = buildNoteDocument({
+    title: "t", sourceUrl: "u", platform: "douyin", exportedAt: "2026-04-06",
+    transcript: "第一句\n第二句", summary, comments: null, mindmap: "# 根\n- 枝", labels
+  })
+  expect(doc.sections.map(s => s.heading)).toEqual(["视频原稿", "视频总结", "思维导图"])
+  expect(doc.sections[0].blocks[0]).toEqual({ kind: "paragraph", text: [{ text: "第一句\n第二句" }] })
 })

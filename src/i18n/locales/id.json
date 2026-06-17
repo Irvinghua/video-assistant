@@ -41,6 +41,7 @@
     "detectingDesc": "Mengambil info subtitle video",
     "noSubtitles": "Subtitle tidak ditemukan",
     "noSubtitlesDesc": "Ekstrak audio digital dan gunakan AI?",
+    "asrUnsupported": "Video ini tidak memiliki subtitle, dan ringkasan berbasis audio belum didukung di platform ini.",
     "summarizeViaAsr": "Ringkas melalui ASR",
     "subtitlesAvailable": "Subtitle tersedia",
     "subtitlesAvailableDesc": "Ditemukan {{count}} baris untuk {{id}}.",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "Summary only",
-    "summary_comments": "Summary + Comments",
-    "summary_mindmap": "Summary + Mind map",
-    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  "exportSections": {
+    "transcript": "Sertakan transkrip",
+    "summary": "Sertakan ringkasan",
+    "comments": "Sertakan analisis komentar",
+    "mindmap": "Sertakan peta pikiran"
   },
   "exportMenu": {
     "button": "Export",
@@ -231,6 +232,7 @@
     "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
     "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
+      "transcriptSection": "Transkrip",
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
       "mindmapSection": "Mind Map",

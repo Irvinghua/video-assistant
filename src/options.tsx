@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react"
 import { Storage } from "@plasmohq/storage"
 import { Trash2, Save, CheckCircle, HelpCircle } from "lucide-react"
 import { cacheService } from "./services/cache/CacheService"
+import { SECTION_ORDER, DEFAULT_SECTIONS, parseSections, type Section } from "./services/export/exportStructure"
 import { I18nProvider } from "./i18n/I18nProvider"
 import { useTranslation } from "./i18n/useTranslation"
 import { LanguageSwitcher } from "./components/LanguageSwitcher"
@@ -135,7 +136,7 @@ function OptionsIndex() {
     const [obsidianVault, setObsidianVault] = useState("")
     const [obsidianFolder, setObsidianFolder] = useState("")
     const [exportTarget, setExportTarget] = useState<"notion" | "obsidian">("notion")
-    const [exportStructure, setExportStructure] = useState("summary")
+    const [exportSections, setExportSections] = useState<Section[]>(DEFAULT_SECTIONS)
     const [configPrompt, setConfigPrompt] = useState<"notion" | "obsidian" | null>(null)
     const [showNotionHelp, setShowNotionHelp] = useState(false)
     const [showObsidianHelp, setShowObsidianHelp] = useState(false)
@@ -200,7 +201,7 @@ function OptionsIndex() {
         const obsidian = await storage.get("obsidianVault") || ""
         const obsidianFld = await storage.get("obsidianFolder") || ""
         const eTarget = (await storage.get("exportTarget")) || "notion"
-        const eStructure = (await storage.get("exportStructure")) || "summary"
+        const eSections = parseSections(await storage.get("exportSections"), await storage.get("exportStructure"))
 
         setChatProvider(cProvider)
         setChatModel(cModel)
@@ -217,7 +218,7 @@ function OptionsIndex() {
         setObsidianFolder(obsidianFld)
         const prompt = (await storage.get("exportConfigPrompt")) || ""
         setExportTarget((prompt || eTarget) as "notion" | "obsidian")
-        setExportStructure(eStructure)
+        setExportSections(eSections)
         if (prompt === "notion" || prompt === "obsidian") {
             setConfigPrompt(prompt)
             await storage.remove("exportConfigPrompt")
@@ -239,7 +240,7 @@ function OptionsIndex() {
         await storage.set("obsidianVault", obsidianVault)
         await storage.set("obsidianFolder", obsidianFolder)
         await storage.set("exportTarget", exportTarget)
-        await storage.set("exportStructure", exportStructure)
+        await storage.set("exportSections", exportSections)
         setStatus(t("options.savedToast"))
         setTimeout(() => setStatus(""), 2000)
     }
@@ -615,30 +616,36 @@ function OptionsIndex() {
                           </>
                         )}
 
-                        {/* 导出结构 */}
+                        {/* 导出结构（多选，至少选一项；导出时按固定顺序拼装） */}
                         <div>
                           <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.exportStructure")}</label>
                           <div className="flex flex-wrap gap-2">
-                            {["summary", "summary_comments", "summary_mindmap", "summary_comments_mindmap"].map((opt) => (
-                              <label
-                                key={opt}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
-                                  exportStructure === opt
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold"
-                                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="exportStructure"
-                                  value={opt}
-                                  checked={exportStructure === opt}
-                                  onChange={(e) => setExportStructure(e.target.value)}
-                                  className="accent-blue-600"
-                                />
-                                {t(`exportStructures.${opt}`)}
-                              </label>
-                            ))}
+                            {SECTION_ORDER.map((opt) => {
+                              const checked = exportSections.includes(opt)
+                              return (
+                                <label
+                                  key={opt}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                                    checked
+                                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold"
+                                      : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    value={opt}
+                                    checked={checked}
+                                    onChange={() => setExportSections(prev =>
+                                      prev.includes(opt)
+                                        ? (prev.length === 1 ? prev : prev.filter(x => x !== opt)) // keep at least one
+                                        : SECTION_ORDER.filter(x => x === opt || prev.includes(x))   // add, keep canonical order
+                                    )}
+                                    className="accent-blue-600"
+                                  />
+                                  {t(`exportSections.${opt}`)}
+                                </label>
+                              )
+                            })}
                           </div>
                         </div>
                     </div>

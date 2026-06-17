@@ -6,7 +6,7 @@ import { useTranslation } from "../../i18n/useTranslation"
 import { ConfigurePrompt } from "../ConfigurePrompt"
 
 export function SummaryPanel() {
-    const { videoInfo, subtitles, dataLoading, seekTo } = useVideo()
+    const { videoInfo, subtitles, dataLoading, seekTo, service } = useVideo()
     const { summary, loading, error, asrStep, handleSummarize, handleDigitalASR, handleExport, handleClearCache } = useSummary()
     const { hasChatKey, hasAsrKey } = useApiKeyStatus()
     const { t } = useTranslation()
@@ -94,6 +94,21 @@ export function SummaryPanel() {
     }
 
     if (subtitles.length === 0 && !dataLoading) {
+        // Platforms without digital audio extraction (e.g. YouTube, whose
+        // progressive URLs are PO-Token/SABR-gated) can't fall back to ASR.
+        if (!service?.supportsDigitalASR()) {
+            return (
+                <div className="p-4 flex flex-col items-center justify-center h-full gap-5 text-center">
+                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                        <FileAudio size={28} className="text-gray-300" />
+                    </div>
+                    <div>
+                        <p className="text-gray-800 dark:text-gray-200 font-bold">{t("summary.noSubtitles")}</p>
+                        <p className="text-gray-400 text-xs px-8">{t("summary.asrUnsupported")}</p>
+                    </div>
+                </div>
+            )
+        }
         if (!hasAsrKey) return <ConfigurePrompt kind="asr" />
         return (
             <div className="p-4 flex flex-col items-center justify-center h-full gap-5 text-center">

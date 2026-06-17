@@ -41,6 +41,7 @@
     "detectingDesc": "Fetching video subtitle info",
     "noSubtitles": "No Subtitles Found",
     "noSubtitlesDesc": "Extract digital audio and use AI?",
+    "asrUnsupported": "This video has no subtitles, and audio-based summarization isn't supported on this platform yet.",
     "summarizeViaAsr": "Summarize via ASR",
     "subtitlesAvailable": "Subtitles Available",
     "subtitlesAvailableDesc": "We found {{count}} lines for {{id}}.",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "Summary only",
-    "summary_comments": "Summary + Comments",
-    "summary_mindmap": "Summary + Mind map",
-    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  "exportSections": {
+    "transcript": "Include transcript",
+    "summary": "Include summary",
+    "comments": "Include comment insights",
+    "mindmap": "Include mind map"
   },
   "exportMenu": {
     "button": "Export",
@@ -231,6 +232,7 @@
     "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
     "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
+      "transcriptSection": "Transcript",
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
       "mindmapSection": "Mind Map",

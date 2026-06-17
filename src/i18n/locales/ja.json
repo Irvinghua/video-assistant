@@ -41,6 +41,7 @@
     "detectingDesc": "字幕情報を取得しています",
     "noSubtitles": "字幕が見つかりません",
     "noSubtitlesDesc": "デジタル音声を抽出してAIで処理しますか？",
+    "asrUnsupported": "この動画には字幕がなく、このプラットフォームでは音声からの要約に現在対応していません。",
     "summarizeViaAsr": "ASRで要約",
     "subtitlesAvailable": "字幕利用可能",
     "subtitlesAvailableDesc": "{{id}} で {{count}} 行の字幕を取得しました。",
@@ -206,11 +207,11 @@
     "notion": "Notion",
     "obsidian": "Obsidian"
   },
-  "exportStructures": {
-    "summary": "Summary only",
-    "summary_comments": "Summary + Comments",
-    "summary_mindmap": "Summary + Mind map",
-    "summary_comments_mindmap": "Summary + Comments + Mind map"
+  "exportSections": {
+    "transcript": "文字起こしを含める",
+    "summary": "要約を含める",
+    "comments": "コメント分析を含める",
+    "mindmap": "マインドマップを含める"
   },
   "exportMenu": {
     "button": "Export",
@@ -231,6 +232,7 @@
     "partialMissing": "Some sections lack subtitles/comments and were skipped; exported the rest",
     "needAiConfig": "Configure an AI model / API key in Settings first",
     "labels": {
+      "transcriptSection": "文字起こし",
       "summarySection": "Video Summary",
       "commentsSection": "Comment Insights",
       "mindmapSection": "Mind Map",

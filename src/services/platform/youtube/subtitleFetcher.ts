@@ -41,6 +41,15 @@ export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegm
         return existing
     }
 
+    // Fast negative path: ask the player whether any caption tracks exist. If
+    // none, return immediately instead of waiting out the 20s toggle/intercept
+    // timeout below (this is the common case for videos without CC).
+    const ccPresent = await hasCaptions()
+    if (!ccPresent) {
+        console.log(`[YouTubeSubtitle] No caption tracks — no CC, skipping intercept (${Date.now() - t0}ms)`)
+        return []
+    }
+
     // Install XHR interceptor + toggle subtitles, then poll + re-toggle.
     // Return as soon as we get data from any source.
     const result = await new Promise<SubtitleSegment[] | null>((resolve) => {
@@ -108,29 +117,91 @@ export async function getYouTubeSubtitles(videoId: string): Promise<SubtitleSegm
 
 /** Send FETCH_YOUTUBE_SUBTITLES message to background to toggle subtitles. */
 function sendToggle(videoId: string) {
-    chrome.runtime.sendMessage(
-        { type: "FETCH_YOUTUBE_SUBTITLES", videoId },
-        (response) => {
-            if (chrome.runtime.lastError) {
-                console.warn("[YouTubeSubtitle] Toggle error:", chrome.runtime.lastError.message)
+    try {
+        chrome.runtime.sendMessage(
+            { type: "FETCH_YOUTUBE_SUBTITLES", videoId },
+            (response) => {
+                if (chrome.runtime.lastError) {
+                    console.warn("[YouTubeSubtitle] Toggle error:", chrome.runtime.lastError.message)
+                }
             }
+        )
+    } catch (e) {
+        // sendMessage throws synchronously when the extension context is invalid
+        console.warn("[YouTubeSubtitle] Toggle threw (context invalidated?):", (e as Error).message)
+    }
+}
+
+/**
+ * Ask background (MAIN world) whether the player reports any caption tracks.
+ * On any uncertainty (no response / context invalidated / error) we assume CC
+ * MAY exist and return true, so the caller falls through to the normal
+ * toggle+intercept path — i.e. this only ever short-circuits on a confident
+ * "no captions", never causes a false negative that drops real subtitles.
+ */
+async function hasCaptions(): Promise<boolean> {
+    return new Promise((resolve) => {
+        let settled = false
+        const finish = (val: boolean) => {
+            if (settled) return
+            settled = true
+            clearTimeout(timer)
+            resolve(val)
         }
-    )
+        // Safety net mirroring readFromMainWorld: if the callback never fires
+        // (extension context invalidated), don't hang — assume CC and proceed.
+        const timer = setTimeout(() => finish(true), 6000)
+
+        try {
+            chrome.runtime.sendMessage(
+                { type: "CHECK_YOUTUBE_CAPTIONS_TRACKLIST" },
+                (response) => {
+                    if (chrome.runtime.lastError || !response?.success) {
+                        finish(true)
+                        return
+                    }
+                    finish(!!response.hasCC)
+                }
+            )
+        } catch (e) {
+            finish(true)
+        }
+    })
 }
 
 /** Ask background to read __vaTimedText from MAIN world and parse it. */
 async function readFromMainWorld(videoId: string): Promise<SubtitleSegment[] | null> {
     return new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-            { type: "CHECK_YOUTUBE_SUBTITLES_CACHE", videoId },
-            (response) => {
-                if (chrome.runtime.lastError || !response?.success || !response.data?.length) {
-                    resolve(null)
-                    return
+        let settled = false
+        const finish = (val: SubtitleSegment[] | null) => {
+            if (settled) return
+            settled = true
+            clearTimeout(timer)
+            resolve(val)
+        }
+
+        // Safety net: if the extension context was invalidated (e.g. the
+        // extension reloaded/updated while this page stayed open), the
+        // sendMessage callback may never fire, leaving this await hung
+        // forever and freezing subtitle detection on "detecting...". Time
+        // out and resolve null so the caller proceeds to the polled main
+        // loop (which has its own 20s overall timeout).
+        const timer = setTimeout(() => finish(null), 3000)
+
+        try {
+            chrome.runtime.sendMessage(
+                { type: "CHECK_YOUTUBE_SUBTITLES_CACHE", videoId },
+                (response) => {
+                    if (chrome.runtime.lastError || !response?.success || !response.data?.length) {
+                        finish(null)
+                        return
+                    }
+                    finish(response.data)
                 }
-                resolve(response.data)
-            }
-        )
+            )
+        } catch (e) {
+            finish(null)
+        }
     })
 }
 

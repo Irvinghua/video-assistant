@@ -51,6 +51,20 @@ it("marks summary missing (no silent ASR) when there are no subtitles", async ()
   expect(r.missing).toEqual(["summary"])
 })
 
+it("includes transcript from the in-memory subtitles", async () => {
+  const deps = makeDeps()
+  const r = await ensureSections(new Set(["transcript"]), inputs, deps)
+  expect(r.transcript).toBe("a")
+  expect(r.missing).toEqual([])
+})
+
+it("marks transcript missing when there are no subtitles or cached script", async () => {
+  const deps = makeDeps({ getScript: vi.fn(async () => null) })
+  const r = await ensureSections(new Set(["transcript"]), { ...inputs, subtitles: [] }, deps)
+  expect(r.transcript).toBeNull()
+  expect(r.missing).toEqual(["transcript"])
+})
+
 it("marks comments missing when there are no sampled comments", async () => {
   const deps = makeDeps()
   const r = await ensureSections(new Set(["comments"]), { ...inputs, sampledComments: { consensus: [], controversial: [] } }, deps)

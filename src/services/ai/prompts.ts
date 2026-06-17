@@ -9,11 +9,13 @@ export const Prompts = {
      */
     chunkSummary: (chunk: string, index: number, language = "Chinese") =>
         `You are a professional video content summarizer.
-Summarize this partial video transcript in ${language}.
+Summarize this partial video transcript.
 CRITICAL: Keep the original [MM:SS] timestamps for key events.
 
 Transcript Part ${index + 1}:
-${chunk}`,
+${chunk}
+
+IMPORTANT: Write the entire summary in ${language}, regardless of the language used in these instructions or the transcript.`,
 
     /**
      * Final structured summary from merged chunk summaries.
@@ -35,7 +37,8 @@ Output EXCLUSIVELY in valid JSON format (no markdown fences, no explanation, jus
 
 For "timestamp" in "chapters", convert the [MM:SS] format back to total seconds (e.g., [1:30] becomes 90).
 Make sure the chapters reflect the logical structure of the video.
-Do NOT wrap the JSON in markdown code fences.`,
+Do NOT wrap the JSON in markdown code fences.
+IMPORTANT: Write EVERY string value (oneLiner, each chapter title and summary, fullDigest) in ${language}, regardless of the language used in these instructions or the transcript.`,
 
     /**
      * Deep analysis of video comment samples against the video's own overview.
@@ -76,7 +79,11 @@ Output language: ${language}. Every string field above must be written in ${lang
      * Summarizes a transcript chunk for mind map pre-processing.
      */
     mindmapChunkSummary: (chunk: string, language = "Chinese") =>
-        `Summarize this partial video transcript concisely in ${language}, keeping key points and [MM:SS] timestamps:\n\n${chunk}`,
+        `Summarize this partial video transcript concisely, keeping key points and [MM:SS] timestamps:
+
+${chunk}
+
+IMPORTANT: Write the summary in ${language}, regardless of the language used in these instructions or the transcript.`,
 
     /**
      * Generates a mind map in Markdown heading format from a transcript.
@@ -84,9 +91,10 @@ Output language: ${language}. Every string field above must be written in ${lang
     mindmap: (transcript: string, language = "Chinese") =>
         `Based on the following video transcript, generate a mind map in Markdown heading format (use #, ##, ###, - for hierarchy).
 The mind map should capture the main topic, key themes, and important details.
-Write all headings and bullets in ${language}.
 Output ONLY the markdown, no explanation.
 
 Transcript:
-${transcript}`,
+${transcript}
+
+IMPORTANT: Write ALL headings and bullets in ${language}, regardless of the language used in these instructions or the transcript.`,
 }
