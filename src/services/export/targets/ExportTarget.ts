@@ -7,8 +7,16 @@ export interface ExportResult {
   message?: string
 }
 
+export interface ClipboardReservation {
+  commit(text: string): Promise<boolean>
+}
+
+export interface ExportOptions {
+  clipboard?: ClipboardReservation
+}
+
 export interface ExportTarget {
   id: "notion" | "obsidian" | "download"
   isConfigured(): boolean
-  export(doc: NoteDocument): Promise<ExportResult>
+  export(doc: NoteDocument, opts?: ExportOptions): Promise<ExportResult>
 }

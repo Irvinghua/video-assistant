@@ -1,37 +1,63 @@
 import type { NoteDocument } from "../NoteDocument"
-import type { ExportTarget, ExportResult } from "./ExportTarget"
+import type { ExportTarget, ExportResult, ExportOptions, ClipboardReservation } from "./ExportTarget"
 import { toMarkdown } from "../renderers/toMarkdown"
 import { sanitizeFilename } from "../sanitizeFilename"
 import { DownloadTarget } from "./DownloadTarget"
 
-/**
- * Build a short obsidian://new link that tells Obsidian to fill the new note
- * from the system clipboard (the core-supported `clipboard` flag). The note
- * body is NOT carried in the URL, so there is no length limit — unlike inline
- * `content=`, which silently breaks for longer notes due to OS/URL length caps.
- */
+const CLIPBOARD_FALLBACK =
+  "The note body was copied to your clipboard. If this note appears empty, " +
+  "paste the clipboard content (Ctrl/Cmd+V), or see " +
+  "https://help.obsidian.md/web-clipper/troubleshoot"
+
 export function buildObsidianUri(vault: string, folder: string, title: string): string {
   const name = sanitizeFilename(title)
   const filePath = folder ? `${folder.replace(/^\/+|\/+$/g, "")}/${name}` : name
   return (
     `obsidian://new?vault=${encodeURIComponent(vault)}` +
-    `&file=${encodeURIComponent(filePath)}` +
-    `&clipboard=true`
+    `&file=${encodeURIComponent(filePath)}`
   )
 }
 
-/**
- * Copy text to the system clipboard. Tries the async Clipboard API first, then
- * falls back to the legacy execCommand path — which still works when transient
- * activation has been lost (our handler awaits the cache read before this runs,
- * so the original click gesture is usually already consumed).
- */
+export function reserveClipboardWrite(): ClipboardReservation | null {
+  const clip = (globalThis as any).navigator?.clipboard
+  if (!clip || typeof clip.write !== "function") return null
+  if (typeof ClipboardItem === "undefined") return null
+  let resolveText: (t: string) => void = () => {}
+  const textPromise = new Promise<string>((resolve) => {
+    resolveText = resolve
+  })
+  const blobPromise = textPromise.then((t) => new Blob([t], { type: "text/plain" }))
+  let item: ClipboardItem
+  try {
+    item = new ClipboardItem({ "text/plain": blobPromise })
+  } catch {
+    return null
+  }
+  let writePromise: Promise<void>
+  try {
+    writePromise = clip.write([item]) as Promise<void>
+  } catch {
+    return null
+  }
+  return {
+    async commit(text: string): Promise<boolean> {
+      resolveText(text)
+      try {
+        await writePromise
+        return true
+      } catch {
+        return false
+      }
+    }
+  }
+}
+
 async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
     return true
   } catch {
-    /* fall through to the legacy path */
+    /* legacy fallback below */
   }
   try {
     const ta = document.createElement("textarea")
@@ -49,7 +75,6 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Launch a custom-protocol URI without leaving a blank tab behind. */
 function openUri(uri: string): void {
   const a = document.createElement("a")
   a.href = uri
@@ -68,15 +93,26 @@ export class ObsidianTarget implements ExportTarget {
     return this.vault.trim().length > 0
   }
 
-  async export(doc: NoteDocument): Promise<ExportResult> {
+  async export(doc: NoteDocument, opts?: ExportOptions): Promise<ExportResult> {
     const markdown = toMarkdown(doc)
-    const copied = await copyToClipboard(markdown)
-    if (!copied) {
-      // Clipboard unavailable — download the file so the content isn't lost.
-      new DownloadTarget().download(markdown, `${sanitizeFilename(doc.title)}.md`)
-      return { kind: "fallback-download" }
+    let writePath = "none"
+    let copied = await copyToClipboard(markdown)
+    if (copied) {
+      writePath = "writeText"
+    } else if (opts?.clipboard) {
+      copied = await opts.clipboard.commit(markdown)
+      if (copied) writePath = "lazy"
     }
-    openUri(buildObsidianUri(this.vault, this.folder, doc.title))
-    return { kind: "invoked" }
+    const diag = `write=${writePath} vault="${this.vault}" folder="${this.folder}"`
+    const uri =
+      buildObsidianUri(this.vault, this.folder, doc.title) +
+      `&clipboard&content=${encodeURIComponent(CLIPBOARD_FALLBACK)}`
+    console.log("[VA-Obsidian]", diag, "uriLen=", uri.length, "uri=", uri)
+    if (!copied) {
+      new DownloadTarget().download(markdown, `${sanitizeFilename(doc.title)}.md`)
+      return { kind: "fallback-download", message: `${diag} write=none` }
+    }
+    openUri(uri)
+    return { kind: "invoked", message: diag }
   }
 }

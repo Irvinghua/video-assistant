@@ -5,6 +5,7 @@ import { useVideo } from "../../contexts/VideoContext"
 import { useI18n } from "../../i18n/I18nProvider"
 import { ExportService, type TargetId } from "../../services/export/ExportService"
 import { DownloadTarget } from "../../services/export/targets/DownloadTarget"
+import { reserveClipboardWrite } from "../../services/export/targets/ObsidianTarget"
 import { buildNoteDocument, type NoteLabels } from "../../services/export/NoteBuilder"
 import { buildVideoUrl } from "../../services/export/buildVideoUrl"
 import { ensureSections } from "../../services/export/ExportContentProvider"
@@ -45,6 +46,12 @@ export function ExportMenu() {
     toastTimer.current = setTimeout(() => setToast(""), 2500)
   }
 
+  const flashLong = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast(msg)
+    toastTimer.current = setTimeout(() => setToast(""), 12000)
+  }
+
   const handle = async (id: TargetId) => {
     setOpen(false)
     if (!videoInfo) {
@@ -62,6 +69,8 @@ export function ExportMenu() {
         return
       }
     }
+
+    const clipboard = id === "obsidian" ? reserveClipboardWrite() : undefined
 
     const sections = new Set(parseSections(
       await storage.get("exportSections"),
@@ -104,13 +113,16 @@ export function ExportMenu() {
     })
 
     try {
-      const result = id === "download" ? await new DownloadTarget().export(doc) : await target!.export(doc)
+      const result = id === "download"
+        ? await new DownloadTarget().export(doc)
+        : await target!.export(doc, clipboard ? { clipboard } : undefined)
+      console.log("[VA-ExportMenu] result", result.kind, result.message)
       if (ensured.missing.length) {
         flash(t("exportMenu.partialMissing"))
       } else if (result.kind === "invoked") {
-        flash(t("exportMenu.obsidianInvoked"))
+        flashLong(`${t("exportMenu.obsidianInvoked")} · ${result.message ?? ""}`)
       } else if (result.kind === "fallback-download") {
-        flash(t("exportMenu.fallbackDownloaded"))
+        flashLong(`${t("exportMenu.fallbackDownloaded")} · ${result.message ?? ""}`)
       } else if (id === "notion") {
         flash(t("exportMenu.notionSuccess"))
       } else {
