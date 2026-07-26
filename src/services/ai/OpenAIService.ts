@@ -15,24 +15,35 @@ export class OpenAIService extends BaseAIService {
             msgs.unshift({ role: "system", content: `Context: ${context}` })
         }
 
-        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        const url = `${this.baseUrl}/chat/completions`
+
+        // Route through the background service worker (FETCH_AI). A direct fetch
+        // from a content script is blocked for endpoints whose CORS headers don't
+        // match the extension origin (e.g. Qwen token-plan), which surfaces as a
+        // bare "Failed to fetch". The worker has host_permissions and bypasses that.
+        const resp = await chrome.runtime.sendMessage({
+            type: "FETCH_AI",
+            url,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${this.apiKey}`
-            },
-            body: JSON.stringify({
-                model: this.modelName,
-                messages: msgs
-            })
+            headers: { "Authorization": `Bearer ${this.apiKey}` },
+            body: JSON.stringify({ model: this.modelName, messages: msgs })
         })
 
-        const data = await response.json()
-
-        if (data.error) {
-            throw new Error(`OpenAI API Error: ${data.error.message}`)
+        if (!resp?.success) {
+            const detail = resp?.status ? `HTTP ${resp.status}` : (resp?.error || "network error")
+            console.error("[OpenAIService] request failed", { url, status: resp?.status, error: resp?.error })
+            throw new Error(`AI request failed: ${detail}`)
         }
 
-        return data.choices?.[0]?.message?.content || ""
+        const data = resp.data
+        if (typeof data === "string") {
+            throw new Error(`AI request failed: non-JSON response (HTTP ${resp.status})`)
+        }
+        if (data?.error) {
+            const msg = typeof data.error === "string" ? data.error : data.error.message
+            throw new Error(`OpenAI API Error: ${msg}`)
+        }
+
+        return data?.choices?.[0]?.message?.content || ""
     }
 }

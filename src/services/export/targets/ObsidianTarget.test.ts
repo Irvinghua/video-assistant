@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest"
-import { buildObsidianUri } from "./ObsidianTarget"
+import { buildObsidianUri, reserveClipboardWrite } from "./ObsidianTarget"
 
 describe("buildObsidianUri", () => {
-  it("builds a short clipboard-based obsidian://new uri without inline content", () => {
+  it("builds an obsidian://new base uri with vault and file only", () => {
     const url = buildObsidianUri("MyVault", "Videos", "标题")
     expect(url).toContain("obsidian://new?")
     expect(url).toContain("vault=MyVault")
     expect(url).toContain("file=Videos%2F%E6%A0%87%E9%A2%98")
-    expect(url).toContain("clipboard=true")
     expect(url).not.toContain("content=")
+    expect(url).not.toContain("clipboard")
   })
 
   it("omits folder prefix when folder empty and sanitizes the title", () => {
@@ -20,5 +20,11 @@ describe("buildObsidianUri", () => {
   it("encodes vault names with spaces", () => {
     const url = buildObsidianUri("My Notes", "", "t")
     expect(url).toContain("vault=My%20Notes")
+  })
+})
+
+describe("reserveClipboardWrite", () => {
+  it("does not throw when the clipboard API is unavailable", () => {
+    expect(() => reserveClipboardWrite()).not.toThrow()
   })
 })

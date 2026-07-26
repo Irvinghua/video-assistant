@@ -115,7 +115,7 @@ export function buildNoteDocument(input: BuildInput): NoteDocument {
   if (input.summary) sections.push(summarySection(input.summary, l))
   if (input.comments) sections.push(commentsSection(input.comments, l))
   if (input.mindmap && input.mindmap.trim()) {
-    sections.push({ heading: l.mindmapSection, blocks: parseMindmap(input.mindmap) })
+    sections.push({ heading: l.mindmapSection, blocks: parseMindmap(input.mindmap), kind: "mindmap" })
   }
   return {
     title: input.title,

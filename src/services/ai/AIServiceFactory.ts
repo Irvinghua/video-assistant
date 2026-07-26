@@ -18,9 +18,10 @@ const DEFAULTS = {
     Grok: { model: "grok-4-fast", url: "https://api.x.ai/v1" },
     Qwen: { model: "qwen3.6-plus", url: "https://dashscope.aliyuncs.com/compatible-mode/v1" },
     "Z.AI": { model: "glm-5.1", url: Z_AI_URL_INTL },
-    MiniMax: { model: "MiniMax-2.5", url: "https://api.minimax.io/v1" },
+    MiniMax: { model: "MiniMax-M3", url: "https://api.minimax.io/v1" },
     DeepSeek: { model: "deepseek-v3", url: "https://api.deepseek.com" },
-    "Ollama Cloud": { model: "glm-5.1", url: "https://ollama.com/api/chat" }
+    "Ollama Cloud": { model: "glm-5.1", url: "https://ollama.com/api/chat" },
+    Custom: { model: "", url: "" }
 } as const
 
 type Provider = keyof typeof DEFAULTS
@@ -58,6 +59,7 @@ export class AIServiceFactory {
             case "Z.AI":
             case "MiniMax":
             case "DeepSeek":
+            case "Custom":
             default:
                 return new OpenAIService(apiKey, model, apiUrl)
         }

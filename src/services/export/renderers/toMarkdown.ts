@@ -15,6 +15,25 @@ function block(b: NoteBlock, depth: number, out: string[]): void {
   }
 }
 
+const LEAF_PX = 30
+const HEIGHT_PAD = 80
+const HEIGHT_MIN = 320
+const HEIGHT_MAX = 4000
+
+function countLeaves(blocks: NoteBlock[]): number {
+  let n = 0
+  for (const b of blocks) {
+    if (b.kind === "bullet" && b.children?.length) n += countLeaves(b.children)
+    else n += 1
+  }
+  return n
+}
+
+function mindmapHeight(blocks: NoteBlock[]): number {
+  const h = countLeaves(blocks) * LEAF_PX + HEIGHT_PAD
+  return Math.max(HEIGHT_MIN, Math.min(HEIGHT_MAX, h))
+}
+
 export function toMarkdown(doc: NoteDocument): string {
   const out: string[] = [`# ${doc.title}`, ""]
   const m = doc.meta
@@ -23,8 +42,16 @@ export function toMarkdown(doc: NoteDocument): string {
   out.push(m.exportedAt, "")
   for (const section of doc.sections) {
     out.push(`## ${section.heading}`, "")
-    for (const b of section.blocks) block(b, 0, out)
-    out.push("")
+    if (section.kind === "mindmap") {
+      const root = doc.title.replace(/\s*\n+\s*/g, " ").trim()
+      const inner: string[] = [`# ${root}`]
+      for (const b of section.blocks) block(b, 0, inner)
+      const height = mindmapHeight(section.blocks)
+      out.push("```markmap", "---", "markmap:", `  height: ${height}`, "---", ...inner, "```", "")
+    } else {
+      for (const b of section.blocks) block(b, 0, out)
+      out.push("")
+    }
   }
   return out.join("\n")
 }
