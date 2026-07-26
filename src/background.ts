@@ -82,6 +82,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
         return true
     }
+
+    if (message.type === "FETCH_AI") {
+        handleFetchAI(message, sendResponse)
+        return true
+    }
 })
 
 // ─── Fast CC presence check: read the player's caption tracklist ───
@@ -274,6 +279,35 @@ async function handleFetch(message: any, sendResponse: (r: any) => void) {
         }
     } catch (error) {
         sendResponse({ success: false, error: (error as Error).message })
+    }
+}
+
+// ─── AI provider proxy (OpenAI-compatible / custom endpoints) ───
+// Content scripts that fetch third-party AI endpoints directly get blocked when
+// the server returns CORS headers that don't match the extension origin (or an
+// incomplete preflight). The service worker has host_permissions and is not
+// subject to page-origin CORS, so routing AI calls through here makes every
+// OpenAI-compatible endpoint (Qwen token-plan, relays, one-api, ...) reliable.
+// No video-site Referer is attached and credentials are omitted on purpose.
+async function handleFetchAI(message: any, sendResponse: (r: any) => void) {
+    const { url, method = "POST", headers = {}, body } = message
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json", ...headers },
+            body,
+            credentials: "omit"
+        })
+        const text = await response.text()
+        let data: any
+        try {
+            data = JSON.parse(text)
+        } catch {
+            data = text
+        }
+        sendResponse({ success: response.ok, status: response.status, data, isRaw: typeof data === "string" })
+    } catch (error) {
+        sendResponse({ success: false, status: 0, error: (error as Error).message || "network error", url })
     }
 }
 
