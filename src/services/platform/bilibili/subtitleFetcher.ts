@@ -280,8 +280,8 @@ export async function getBilibiliSubtitles(bvid: string): Promise<SubtitleSegmen
 
             console.log(`[BilibiliService] Selected track: ${bestSubtitle.lan}`)
             if (bestSubtitle.lan?.startsWith("ai-")) {
-                console.warn(`[BilibiliService] ⚠️ WARNING: Selected AI-generated subtitle track (${bestSubtitle.lan}), which may contain incorrect content`)
-                console.warn(`[BilibiliService] Recommend using ASR feature for accurate subtitles`)
+                console.log(`[BilibiliService] Selected AI-generated subtitle track (${bestSubtitle.lan}), which may contain incorrect content`)
+                console.log(`[BilibiliService] Recommend using ASR feature for accurate subtitles`)
             } else {
                 console.log(`[BilibiliService] ✅ Selected non-AI subtitle track (${bestSubtitle.lan})`)
             }
