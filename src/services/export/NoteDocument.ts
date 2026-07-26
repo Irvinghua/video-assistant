@@ -11,6 +11,7 @@ export type NoteBlock =
 export interface NoteSection {
   heading: string
   blocks: NoteBlock[]
+  kind?: "mindmap"
 }
 
 export interface NoteMeta {
