@@ -48,8 +48,12 @@ const CHAT_CONFIGS = {
         defaultUrl: Z_AI_URL_INTL
     },
     "MiniMax": {
-        models: ["MiniMax-2.5", "MiniMax-M2.7"],
+        models: ["MiniMax-M3", "MiniMax-2.5", "MiniMax-M2.7"],
         defaultUrl: "https://api.minimax.io/v1"
+    },
+    "Custom": {
+        models: [],
+        defaultUrl: ""
     },
     "DeepSeek": {
         models: ["deepseek-v3", "deepseek-r2"],
@@ -249,7 +253,7 @@ function OptionsIndex() {
         setChatProvider(provider)
         const config = CHAT_CONFIGS[provider as keyof typeof CHAT_CONFIGS]
         if (config) {
-            setChatModel(config.models[0])
+            setChatModel(config.models[0] || "")
             setChatApiUrl(resolveChatDefaultUrl(provider, locale))
         }
     }
@@ -328,19 +332,29 @@ function OptionsIndex() {
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.chatModel")}</label>
-                                <select
-                                    value={chatModel}
-                                    onChange={(e) => setChatModel(e.target.value)}
-                                    disabled={chatProvider === "Ollama Cloud" && ollamaLoading}
-                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60"
-                                >
-                                    {(chatProvider === "Ollama Cloud"
-                                        ? ollamaModels
-                                        : CHAT_CONFIGS[chatProvider as keyof typeof CHAT_CONFIGS]?.models || []
-                                    ).map(m => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </select>
+                                {chatProvider === "Custom" ? (
+                                    <input
+                                        type="text"
+                                        value={chatModel}
+                                        onChange={(e) => setChatModel(e.target.value)}
+                                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                        placeholder="e.g. gpt-4o, claude-sonnet-4-20250514, ..."
+                                    />
+                                ) : (
+                                    <select
+                                        value={chatModel}
+                                        onChange={(e) => setChatModel(e.target.value)}
+                                        disabled={chatProvider === "Ollama Cloud" && ollamaLoading}
+                                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60"
+                                    >
+                                        {(chatProvider === "Ollama Cloud"
+                                            ? ollamaModels
+                                            : CHAT_CONFIGS[chatProvider as keyof typeof CHAT_CONFIGS]?.models || []
+                                        ).map(m => (
+                                            <option key={m} value={m}>{m}</option>
+                                        ))}
+                                    </select>
+                                )}
                                 {chatProvider === "Ollama Cloud" && ollamaLoading && (
                                     <p className="text-xs text-gray-500 mt-1">{t("options.ollama.loading")}</p>
                                 )}
