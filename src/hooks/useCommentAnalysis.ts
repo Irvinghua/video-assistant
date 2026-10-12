@@ -5,6 +5,7 @@ import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { getPlainScript } from "../services/cache/SubtitleScript"
 import { useVideo } from "../contexts/VideoContext"
 import { useI18n } from "../i18n/I18nProvider"
+import { isAIJsonFormatError } from "../services/ai/withJsonRetry"
 
 export interface UseCommentAnalysisResult {
     analysis: CommentAnalysis | null
@@ -49,7 +50,7 @@ export function useCommentAnalysis(): UseCommentAnalysisResult {
             setAnalysis(result)
             await cacheService.set(cacheKeys.comments(platform, videoId), result)
         } catch (err) {
-            setError((err as Error).message)
+            setError(isAIJsonFormatError(err) ? t("comments.errors.weakModel") : (err as Error).message)
         } finally {
             setLoading(false)
         }

@@ -7,6 +7,7 @@ import { transcribeLongAudio } from "../services/asr/ASRPipeline"
 import { cacheService, cacheKeys } from "../services/cache/CacheService"
 import { useVideo } from "../contexts/VideoContext"
 import { useI18n } from "../i18n/I18nProvider"
+import { isAIJsonFormatError } from "../services/ai/withJsonRetry"
 
 export type ASRStep = "idle" | "getting_url" | "downloading" | "transcribing" | "summarizing"
 
@@ -89,7 +90,7 @@ export function useSummary(): UseSummaryResult {
                 await cacheService.set(cacheKeys.summary(platform, videoId!), result)
             }
         } catch (err) {
-            setError((err as Error).message)
+            setError(isAIJsonFormatError(err) ? t("summary.errors.weakModel") : (err as Error).message)
         } finally {
             setLoading(false)
         }
@@ -131,7 +132,7 @@ export function useSummary(): UseSummaryResult {
             setAsrStep("summarizing")
             await handleSummarize(asrSubs)
         } catch (err) {
-            setError((err as Error).message)
+            setError(isAIJsonFormatError(err) ? t("summary.errors.weakModel") : (err as Error).message)
         } finally {
             setAsrStep("idle")
         }

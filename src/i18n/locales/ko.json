@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "요약할 콘텐츠가 없습니다.",
       "noAudio": "이 비디오는 오디오 추출을 지원하지 않습니다.",
-      "transcriptionEmpty": "전사 결과가 비어 있습니다."
+      "transcriptionEmpty": "전사 결과가 비어 있습니다.", "weakModel": "AI 모델의 능력이 부족하여 이 동영상 내용을 정상적으로 요약할 수 없습니다."
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "사각 / 확장",
     "errors": {
       "noComments": "분석할 댓글이 없습니다.",
-      "needSubtitle": "댓글 분석 전에 먼저 비디오 자막을 가져오세요 (요약 또는 ASR로 요약)."
+      "needSubtitle": "댓글 분석 전에 먼저 비디오 자막을 가져오세요 (요약 또는 ASR로 요약).", "weakModel": "AI 모델의 능력이 부족하여 이 동영상 댓글을 정상적으로 분석할 수 없습니다."
     }
   },
   "askAI": {

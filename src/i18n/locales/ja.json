@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "要約する内容がありません。",
       "noAudio": "この動画は音声抽出に対応していません。",
-      "transcriptionEmpty": "文字起こし結果が空です。"
+      "transcriptionEmpty": "文字起こし結果が空です。", "weakModel": "AIモデルの能力が低く、この動画の内容を正常に要約できません。"
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "盲点 / 溢出",
     "errors": {
       "noComments": "分析できるコメントがありません。",
-      "needSubtitle": "コメント分析の前に、まず動画字幕を取得してください（要約 または ASRで要約）。"
+      "needSubtitle": "コメント分析の前に、まず動画字幕を取得してください（要約 または ASRで要約）。", "weakModel": "AIモデルの能力が低く、この動画のコメントを正常に分析できません。"
     }
   },
   "askAI": {

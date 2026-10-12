@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "Tidak ada konten untuk diringkas.",
       "noAudio": "Video ini tidak mendukung ekstraksi audio.",
-      "transcriptionEmpty": "Hasil transkripsi kosong."
+      "transcriptionEmpty": "Hasil transkripsi kosong.", "weakModel": "Model AI tidak cukup mampu untuk merangkum konten video ini."
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "MELESET / MELUAS",
     "errors": {
       "noComments": "Tidak ada komentar untuk dianalisis.",
-      "needSubtitle": "Mohon ambil subtitle video terlebih dahulu (Ringkas atau Ringkas via ASR) sebelum menganalisis komentar."
+      "needSubtitle": "Mohon ambil subtitle video terlebih dahulu (Ringkas atau Ringkas via ASR) sebelum menganalisis komentar.", "weakModel": "Model AI tidak cukup mampu untuk menganalisis komentar."
     }
   },
   "askAI": {

@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "没有可总结的内容。",
       "noAudio": "此视频不支持音频提取。",
-      "transcriptionEmpty": "转写结果为空。"
+      "transcriptionEmpty": "转写结果为空。", "weakModel": "大模型能力低下，无法正常总结视频内容。"
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "盲区 / 溢出",
     "errors": {
       "noComments": "没有可分析的评论。",
-      "needSubtitle": "请先获取视频字幕（Summarize 或 Summarize via ASR），再分析评论。"
+      "needSubtitle": "请先获取视频字幕（Summarize 或 Summarize via ASR），再分析评论。", "weakModel": "大模型能力低下，无法正常分析评论内容。"
     }
   },
   "askAI": {

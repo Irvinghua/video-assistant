@@ -3,6 +3,24 @@
  * All prompt strings live here to ensure consistent behavior across the app.
  */
 
+/** Required JSON shape for the final video summary (single source of truth). */
+export const SUMMARY_JSON_SCHEMA = `{
+  "oneLiner": "A single sentence summary of the whole video",
+  "chapters": [
+    { "timestamp": number_of_seconds, "title": "Short title", "summary": "Brief summary of this section" }
+  ],
+  "fullDigest": "A detailed 500-1000 word summary of the video content"
+}`
+
+/** Required JSON shape for comment analysis (single source of truth). */
+export const COMMENTS_JSON_SCHEMA = `{
+  "consensus": [{ "point": "string", "heat": "extreme" | "high" | "medium" }],
+  "divergences": [{ "topic": "string", "sideA": "string", "sideB": "string", "rootCause": "string" }],
+  "gap": { "hit": "string", "miss": "string" },
+  "mood": ["string", "string", "string"],
+  "spotlight": ["string"]
+}`
+
 export const Prompts = {
     /**
      * Summarizes a chunk of a video transcript, preserving timestamps.
@@ -27,13 +45,7 @@ Intermediate Summaries:
 ${combinedSummary}
 
 Output EXCLUSIVELY in valid JSON format (no markdown fences, no explanation, just the JSON object):
-{
-  "oneLiner": "A single sentence summary of the whole video",
-  "chapters": [
-    { "timestamp": number_of_seconds, "title": "Short title", "summary": "Brief summary of this section" }
-  ],
-  "fullDigest": "A detailed 500-1000 word summary of the video content"
-}
+${SUMMARY_JSON_SCHEMA}
 
 For "timestamp" in "chapters", convert the [MM:SS] format back to total seconds (e.g., [1:30] becomes 90).
 Make sure the chapters reflect the logical structure of the video.
@@ -66,13 +78,7 @@ Requirements:
 - Spotlight: extract 1-2 high-information-gain expert comments or witty replies (quote briefly).
 
 Output JSON ONLY (no markdown fences, no extra explanation), schema:
-{
-  "consensus": [{ "point": "string", "heat": "extreme" | "high" | "medium" }],
-  "divergences": [{ "topic": "string", "sideA": "string", "sideB": "string", "rootCause": "string" }],
-  "gap": { "hit": "string", "miss": "string" },
-  "mood": ["string", "string", "string"],
-  "spotlight": ["string"]
-}
+${COMMENTS_JSON_SCHEMA}
 Output language: ${language}. Every string field above must be written in ${language}.`,
 
     /**

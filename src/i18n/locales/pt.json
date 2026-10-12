@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "Sem conteúdo para resumir.",
       "noAudio": "Este vídeo não suporta extração de áudio.",
-      "transcriptionEmpty": "O resultado da transcrição está vazio."
+      "transcriptionEmpty": "O resultado da transcrição está vazio.", "weakModel": "O modelo de IA não tem capacidade suficiente para resumir o conteúdo deste vídeo."
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "DESVIO / EXTRAVASAMENTO",
     "errors": {
       "noComments": "Sem comentários para analisar.",
-      "needSubtitle": "Por favor, obtenha primeiro as legendas (Resumir ou Resumir via ASR) antes de analisar os comentários."
+      "needSubtitle": "Por favor, obtenha primeiro as legendas (Resumir ou Resumir via ASR) antes de analisar os comentários.", "weakModel": "O modelo de IA não tem capacidade suficiente para analisar os comentários."
     }
   },
   "askAI": {

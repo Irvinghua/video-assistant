@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "Aucun contenu à résumer.",
       "noAudio": "Cette vidéo ne prend pas en charge l'extraction audio.",
-      "transcriptionEmpty": "Le résultat de la transcription est vide."
+      "transcriptionEmpty": "Le résultat de la transcription est vide.", "weakModel": "Le modèle d'IA n'est pas assez performant pour résumer le contenu de cette vidéo."
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "ÉCART / DÉBORDEMENT",
     "errors": {
       "noComments": "Aucun commentaire à analyser.",
-      "needSubtitle": "Veuillez d'abord récupérer les sous-titres (Résumer ou Résumer via ASR) avant d'analyser les commentaires."
+      "needSubtitle": "Veuillez d'abord récupérer les sous-titres (Résumer ou Résumer via ASR) avant d'analyser les commentaires.", "weakModel": "Le modèle d'IA n'est pas assez performant pour analyser les commentaires."
     }
   },
   "askAI": {

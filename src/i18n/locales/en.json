@@ -51,7 +51,7 @@
     "errors": {
       "noContent": "No content available to summarize.",
       "noAudio": "This video does not support audio extraction.",
-      "transcriptionEmpty": "Transcription result is empty."
+      "transcriptionEmpty": "Transcription result is empty.", "weakModel": "The AI model is not capable enough to summarize this video content."
     }
   },
   "asr": {
@@ -91,7 +91,7 @@
     "miss": "MISS / OVERFLOW",
     "errors": {
       "noComments": "No comments available to analyze.",
-      "needSubtitle": "Please fetch video subtitles first (Summarize or Summarize via ASR) before analyzing comments."
+      "needSubtitle": "Please fetch video subtitles first (Summarize or Summarize via ASR) before analyzing comments.", "weakModel": "The AI model is not capable enough to analyze the comments."
     }
   },
   "askAI": {

@@ -18,7 +18,9 @@ export class OllamaService extends BaseAIService {
         const body = JSON.stringify({
             model: this.modelName,
             messages: msgs,
-            stream: false
+            stream: false,
+            // Grammar-constrained decoding: ask Ollama to emit valid JSON.
+            format: "json"
         })
 
         // Ollama Cloud does not send CORS headers, so a direct fetch from a
