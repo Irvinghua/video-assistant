@@ -13,6 +13,9 @@ export interface SummaryResult {
     fullDigest: string
 }
 
+/** Summary output mode: `deep` (detailed) or `concise` (~500-char digest). */
+export type SummaryDepth = "deep" | "concise"
+
 export type ConsensusHeat = "extreme" | "high" | "medium"
 
 export interface CommentAnalysis {

@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "Sem conteúdo para resumir.",
       "noAudio": "Este vídeo não suporta extração de áudio.",
-      "transcriptionEmpty": "O resultado da transcrição está vazio.", "weakModel": "O modelo de IA não tem capacidade suficiente para resumir o conteúdo deste vídeo."
+      "transcriptionEmpty": "O resultado da transcrição está vazio.",
+      "weakModel": "O modelo de IA não tem capacidade suficiente para resumir o conteúdo deste vídeo."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "DESVIO / EXTRAVASAMENTO",
     "errors": {
       "noComments": "Sem comentários para analisar.",
-      "needSubtitle": "Por favor, obtenha primeiro as legendas (Resumir ou Resumir via ASR) antes de analisar os comentários.", "weakModel": "O modelo de IA não tem capacidade suficiente para analisar os comentários."
+      "needSubtitle": "Por favor, obtenha primeiro as legendas (Resumir ou Resumir via ASR) antes de analisar os comentários.",
+      "weakModel": "O modelo de IA não tem capacidade suficiente para analisar os comentários."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "Ativar raciocínio (Thinking)",
+      "summaryDepth": "Modo de resumo"
     },
     "placeholders": {
       "chatApiKey": "Digite a chave API para {{provider}}",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "Ativado: maior qualidade, mais lento. Desativado: mais rápido, qualidade inferior.",
+      "summaryDepth": "O modo detalhado é mais completo; o conciso é mais rápido e o resumo (fullDigest) tem cerca de 500 caracteres."
+    },
+    "depthOptions": {
+      "deep": "Detalhado (completo, padrão)",
+      "concise": "Conciso (mais rápido, ~500 caracteres)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

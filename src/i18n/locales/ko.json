@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "요약할 콘텐츠가 없습니다.",
       "noAudio": "이 비디오는 오디오 추출을 지원하지 않습니다.",
-      "transcriptionEmpty": "전사 결과가 비어 있습니다.", "weakModel": "AI 모델의 능력이 부족하여 이 동영상 내용을 정상적으로 요약할 수 없습니다."
+      "transcriptionEmpty": "전사 결과가 비어 있습니다.",
+      "weakModel": "AI 모델의 능력이 부족하여 이 동영상 내용을 정상적으로 요약할 수 없습니다."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "사각 / 확장",
     "errors": {
       "noComments": "분석할 댓글이 없습니다.",
-      "needSubtitle": "댓글 분석 전에 먼저 비디오 자막을 가져오세요 (요약 또는 ASR로 요약).", "weakModel": "AI 모델의 능력이 부족하여 이 동영상 댓글을 정상적으로 분석할 수 없습니다."
+      "needSubtitle": "댓글 분석 전에 먼저 비디오 자막을 가져오세요 (요약 또는 ASR로 요약).",
+      "weakModel": "AI 모델의 능력이 부족하여 이 동영상 댓글을 정상적으로 분석할 수 없습니다."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "사고(Thinking) 활성화",
+      "summaryDepth": "요약 출력 모드"
     },
     "placeholders": {
       "chatApiKey": "{{provider}}의 API Key를 입력하세요",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "켜기: 품질이 더 높지만 느립니다. 끄기: 더 빠르지만 품질이 떨어집니다.",
+      "summaryDepth": "심층 버전은 더 자세하고, 간결 버전은 더 빠르며 요약(fullDigest)은 약 500자입니다."
+    },
+    "depthOptions": {
+      "deep": "심층 버전(상세, 기본)",
+      "concise": "간결 버전(더 빠름, 약 500자)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

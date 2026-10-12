@@ -5,6 +5,7 @@ import { ClaudeService } from "./ClaudeService"
 import { OllamaService } from "./OllamaService"
 import { Storage } from "@plasmohq/storage"
 import { LOCALE_STORAGE_KEY } from "../../i18n"
+import { getChatThinking } from "./aiSettings"
 
 const storage = new Storage()
 
@@ -45,13 +46,15 @@ export class AIServiceFactory {
             throw new Error(`API Key for ${provider} is missing`)
         }
 
+        const thinking = await getChatThinking()
+
         switch (provider) {
             case "Anthropic":
-                return new ClaudeService(apiKey, model, apiUrl)
+                return new ClaudeService(apiKey, model, apiUrl, thinking)
             case "Gemini":
-                return new GeminiService(apiKey, model, apiUrl)
+                return new GeminiService(apiKey, model, apiUrl, thinking)
             case "Ollama Cloud":
-                return new OllamaService(apiKey, model, apiUrl)
+                return new OllamaService(apiKey, model, apiUrl, thinking)
             case "OpenAI":
             case "Grok":
             case "Qwen":
@@ -59,7 +62,7 @@ export class AIServiceFactory {
             case "MiniMax":
             case "DeepSeek":
             default:
-                return new OpenAIService(apiKey, model, apiUrl)
+                return new OpenAIService(apiKey, model, apiUrl, provider, thinking)
         }
     }
 }

@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "No content available to summarize.",
       "noAudio": "This video does not support audio extraction.",
-      "transcriptionEmpty": "Transcription result is empty.", "weakModel": "The AI model is not capable enough to summarize this video content."
+      "transcriptionEmpty": "Transcription result is empty.",
+      "weakModel": "The AI model is not capable enough to summarize this video content."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "MISS / OVERFLOW",
     "errors": {
       "noComments": "No comments available to analyze.",
-      "needSubtitle": "Please fetch video subtitles first (Summarize or Summarize via ASR) before analyzing comments.", "weakModel": "The AI model is not capable enough to analyze the comments."
+      "needSubtitle": "Please fetch video subtitles first (Summarize or Summarize via ASR) before analyzing comments.",
+      "weakModel": "The AI model is not capable enough to analyze the comments."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "Enable Thinking",
+      "summaryDepth": "Summary Depth"
     },
     "placeholders": {
       "chatApiKey": "Enter API Key for {{provider}}",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "On: higher quality, slower. Off: faster, but lower quality.",
+      "summaryDepth": "Deep produces a more detailed digest; Concise is faster with a ~500-character digest."
+    },
+    "depthOptions": {
+      "deep": "Deep (detailed, default)",
+      "concise": "Concise (faster, ~500 chars)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

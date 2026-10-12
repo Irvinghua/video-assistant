@@ -1,5 +1,6 @@
 import { AIServiceFactory } from "../ai/AIServiceFactory"
-import { Prompts, SUMMARY_JSON_SCHEMA } from "../ai/prompts"
+import { Prompts, buildSummaryJsonSchema } from "../ai/prompts"
+import { getSummaryDepth } from "../ai/aiSettings"
 import { withJsonRetry } from "../ai/withJsonRetry"
 import { chunkText } from "../../utils/textChunker"
 import type { SummaryResult } from "../ai/types"
@@ -32,9 +33,10 @@ export class VideoSummarizer {
             combinedSummary = chunkSummaries.join("\n\n---\n\n")
         }
 
+        const depth = await getSummaryDepth()
         const parsed = await withJsonRetry(aiService, {
-            prompt: Prompts.finalSummary(combinedSummary, language),
-            schemaHint: SUMMARY_JSON_SCHEMA,
+            prompt: Prompts.finalSummary(combinedSummary, language, depth),
+            schemaHint: buildSummaryJsonSchema(depth),
             validate: (value) =>
                 value && Array.isArray(value.chapters) ? null : "`chapters` must be an array"
         })

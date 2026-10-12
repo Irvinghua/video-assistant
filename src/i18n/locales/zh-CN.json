@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "没有可总结的内容。",
       "noAudio": "此视频不支持音频提取。",
-      "transcriptionEmpty": "转写结果为空。", "weakModel": "大模型能力低下，无法正常总结视频内容。"
+      "transcriptionEmpty": "转写结果为空。",
+      "weakModel": "大模型能力低下，无法正常总结视频内容。"
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "盲区 / 溢出",
     "errors": {
       "noComments": "没有可分析的评论。",
-      "needSubtitle": "请先获取视频字幕（Summarize 或 Summarize via ASR），再分析评论。", "weakModel": "大模型能力低下，无法正常分析评论内容。"
+      "needSubtitle": "请先获取视频字幕（Summarize 或 Summarize via ASR），再分析评论。",
+      "weakModel": "大模型能力低下，无法正常分析评论内容。"
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault 名称",
       "obsidianFolder": "Obsidian 目标文件夹（可选）",
       "exportTarget": "导出目标",
-      "exportStructure": "导出结构"
+      "exportStructure": "导出结构",
+      "chatThinking": "启用思考（Thinking）",
+      "summaryDepth": "摘要输出模式"
     },
     "placeholders": {
       "chatApiKey": "请输入 {{provider}} 的 API Key",
@@ -201,7 +205,15 @@
       "note": "❗ 需先安装 Obsidian 桌面端；Vault 名称填错会唤起失败或写到别的库。",
       "done": "完成后点「保存全部设置」，到视频侧边栏点「导入到 Obsidian」即可。"
     },
-    "keySafetyHint": "（所有 Key 仅保存在本地浏览器中，不会上传到服务器中！请注意安全保管！）"
+    "keySafetyHint": "（所有 Key 仅保存在本地浏览器中，不会上传到服务器中！请注意安全保管！）",
+    "hints": {
+      "chatThinking": "开启：生成文本质量更高，但速度更慢；关闭：速度更快，但文本质量下降。",
+      "summaryDepth": "深度版输出更详细；精简版更省时，精简稿（fullDigest）约 500 字。"
+    },
+    "depthOptions": {
+      "deep": "深度版（详细，默认）",
+      "concise": "精简版（更快，约 500 字）"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

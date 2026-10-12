@@ -3,14 +3,30 @@
  * All prompt strings live here to ensure consistent behavior across the app.
  */
 
-/** Required JSON shape for the final video summary (single source of truth). */
-export const SUMMARY_JSON_SCHEMA = `{
+import type { SummaryDepth } from "./types"
+
+/** Per-depth description of the `fullDigest` field. */
+const FULL_DIGEST_HINT: Record<SummaryDepth, string> = {
+    deep: "A detailed 500-1000 word summary of the video content",
+    concise: "A concise summary of the video content, around 500 characters"
+}
+
+/**
+ * Required JSON shape for the final video summary (single source of truth).
+ * `depth` controls how long the `fullDigest` field should be.
+ */
+export function buildSummaryJsonSchema(depth: SummaryDepth = "deep"): string {
+    return `{
   "oneLiner": "A single sentence summary of the whole video",
   "chapters": [
     { "timestamp": number_of_seconds, "title": "Short title", "summary": "Brief summary of this section" }
   ],
-  "fullDigest": "A detailed 500-1000 word summary of the video content"
+  "fullDigest": "${FULL_DIGEST_HINT[depth]}"
 }`
+}
+
+/** Default (deep) summary schema. Prefer `buildSummaryJsonSchema(depth)` when depth is known. */
+export const SUMMARY_JSON_SCHEMA = buildSummaryJsonSchema("deep")
 
 /** Required JSON shape for comment analysis (single source of truth). */
 export const COMMENTS_JSON_SCHEMA = `{
@@ -37,15 +53,16 @@ IMPORTANT: Write the entire summary in ${language}, regardless of the language u
 
     /**
      * Final structured summary from merged chunk summaries.
+     * `depth` tunes the requested `fullDigest` length.
      */
-    finalSummary: (combinedSummary: string, language = "Chinese") =>
+    finalSummary: (combinedSummary: string, language = "Chinese", depth: SummaryDepth = "deep") =>
         `Based on the following intermediate summaries of a video (which contain timestamps), generate a final structured summary in ${language}.
 
 Intermediate Summaries:
 ${combinedSummary}
 
 Output EXCLUSIVELY in valid JSON format (no markdown fences, no explanation, just the JSON object):
-${SUMMARY_JSON_SCHEMA}
+${buildSummaryJsonSchema(depth)}
 
 For "timestamp" in "chapters", convert the [MM:SS] format back to total seconds (e.g., [1:30] becomes 90).
 Make sure the chapters reflect the logical structure of the video.

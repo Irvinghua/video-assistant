@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "Tidak ada konten untuk diringkas.",
       "noAudio": "Video ini tidak mendukung ekstraksi audio.",
-      "transcriptionEmpty": "Hasil transkripsi kosong.", "weakModel": "Model AI tidak cukup mampu untuk merangkum konten video ini."
+      "transcriptionEmpty": "Hasil transkripsi kosong.",
+      "weakModel": "Model AI tidak cukup mampu untuk merangkum konten video ini."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "MELESET / MELUAS",
     "errors": {
       "noComments": "Tidak ada komentar untuk dianalisis.",
-      "needSubtitle": "Mohon ambil subtitle video terlebih dahulu (Ringkas atau Ringkas via ASR) sebelum menganalisis komentar.", "weakModel": "Model AI tidak cukup mampu untuk menganalisis komentar."
+      "needSubtitle": "Mohon ambil subtitle video terlebih dahulu (Ringkas atau Ringkas via ASR) sebelum menganalisis komentar.",
+      "weakModel": "Model AI tidak cukup mampu untuk menganalisis komentar."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "Aktifkan Thinking",
+      "summaryDepth": "Mode Ringkasan"
     },
     "placeholders": {
       "chatApiKey": "Masukkan API Key untuk {{provider}}",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "Aktif: kualitas lebih tinggi, lebih lambat. Nonaktif: lebih cepat, kualitas menurun.",
+      "summaryDepth": "Versi mendalam lebih rinci; versi ringkas lebih cepat dengan ringkasan (fullDigest) sekitar 500 karakter."
+    },
+    "depthOptions": {
+      "deep": "Mendalam (rinci, default)",
+      "concise": "Ringkas (lebih cepat, ~500 karakter)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

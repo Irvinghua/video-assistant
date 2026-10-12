@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "لا يوجد محتوى متاح للتلخيص.",
       "noAudio": "هذا الفيديو لا يدعم استخراج الصوت.",
-      "transcriptionEmpty": "نتيجة النسخ فارغة.", "weakModel": "قدرة نموذج الذكاء الاصطناعي غير كافية لتلخيص محتوى هذا الفيديو."
+      "transcriptionEmpty": "نتيجة النسخ فارغة.",
+      "weakModel": "قدرة نموذج الذكاء الاصطناعي غير كافية لتلخيص محتوى هذا الفيديو."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "فجوة / امتداد",
     "errors": {
       "noComments": "لا توجد تعليقات للتحليل.",
-      "needSubtitle": "يرجى جلب الترجمة أولًا (التلخيص أو التلخيص عبر ASR) قبل تحليل التعليقات.", "weakModel": "قدرة نموذج الذكاء الاصطناعي غير كافية لتحليل التعليقات."
+      "needSubtitle": "يرجى جلب الترجمة أولًا (التلخيص أو التلخيص عبر ASR) قبل تحليل التعليقات.",
+      "weakModel": "قدرة نموذج الذكاء الاصطناعي غير كافية لتحليل التعليقات."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "تفعيل التفكير (Thinking)",
+      "summaryDepth": "وضع ملخص الإخراج"
     },
     "placeholders": {
       "chatApiKey": "أدخل مفتاح API لـ {{provider}}",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "مُفعّل: جودة أعلى وأبطأ. مُعطّل: أسرع لكن جودة أقل.",
+      "summaryDepth": "النسخة العميقة أكثر تفصيلاً؛ النسخة الموجزة أسرع ويبلغ الملخص (fullDigest) حوالي 500 حرف."
+    },
+    "depthOptions": {
+      "deep": "عميق (مفصّل، افتراضي)",
+      "concise": "موجز (أسرع، ~500 حرف)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

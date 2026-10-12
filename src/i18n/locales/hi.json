@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "सारांश के लिए कोई सामग्री नहीं है।",
       "noAudio": "यह वीडियो ऑडियो निष्कर्षण का समर्थन नहीं करता।",
-      "transcriptionEmpty": "लिप्यंतरण परिणाम खाली है।", "weakModel": "AI मॉडल इस वीडियो सामग्री को सारांशित करने में सक्षम नहीं है।"
+      "transcriptionEmpty": "लिप्यंतरण परिणाम खाली है।",
+      "weakModel": "AI मॉडल इस वीडियो सामग्री को सारांशित करने में सक्षम नहीं है।"
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "चूक / विस्तार",
     "errors": {
       "noComments": "विश्लेषण के लिए कोई टिप्पणी उपलब्ध नहीं है।",
-      "needSubtitle": "कृपया टिप्पणियों का विश्लेषण करने से पहले पहले वीडियो उपशीर्षक प्राप्त करें (सारांश या ASR के द्वारा सारांश)।", "weakModel": "AI मॉडल टिप्पणियों का विश्लेषण करने में सक्षम नहीं है।"
+      "needSubtitle": "कृपया टिप्पणियों का विश्लेषण करने से पहले पहले वीडियो उपशीर्षक प्राप्त करें (सारांश या ASR के द्वारा सारांश)।",
+      "weakModel": "AI मॉडल टिप्पणियों का विश्लेषण करने में सक्षम नहीं है।"
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "थिंकिंग सक्षम करें",
+      "summaryDepth": "सारांश आउटपुट मोड"
     },
     "placeholders": {
       "chatApiKey": "{{provider}} के लिए API Key दर्ज करें",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "चालू: गुणवत्ता बेहतर, धीमा। बंद: तेज़, गुणवत्ता कम।",
+      "summaryDepth": "विस्तृत संस्करण अधिक विस्तृत है; संक्षिप्त संस्करण तेज़ है और सारांश (fullDigest) लगभग 500 अक्षरों का होता है।"
+    },
+    "depthOptions": {
+      "deep": "विस्तृत (विस्तृत, डिफ़ॉल्ट)",
+      "concise": "संक्षिप्त (तेज़, ~500 अक्षर)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

@@ -124,6 +124,8 @@ function OptionsIndex() {
     const [ollamaModels, setOllamaModels] = useState<string[]>(CHAT_CONFIGS["Ollama Cloud"].models)
     const [ollamaLoading, setOllamaLoading] = useState(false)
     const [ollamaError, setOllamaError] = useState("")
+    const [chatThinking, setChatThinking] = useState(false)
+    const [summaryDepth, setSummaryDepth] = useState<"deep" | "concise">("deep")
 
     const [asrProvider, setAsrProvider] = useState("OpenAI")
     const [asrModel, setAsrModel] = useState("whisper-1")
@@ -189,6 +191,8 @@ function OptionsIndex() {
         const cModel = await storage.get("chatModel") || CHAT_CONFIGS[cProvider as keyof typeof CHAT_CONFIGS]?.models[0] || ""
         const cUrl = await storage.get("chatApiUrl") || resolveChatDefaultUrl(cProvider, locale)
         const cKey = await storage.get("chatApiKey") || ""
+        const cThinking = ((await storage.get("chatThinking")) as unknown as boolean) === true
+        const cDepth = (await storage.get("summaryDepth")) === "concise" ? "concise" : "deep"
 
         const provider = await storage.get("asrProvider") || "OpenAI"
         const amodel = await storage.get("asrModel") || "whisper-1"
@@ -207,6 +211,8 @@ function OptionsIndex() {
         setChatModel(cModel)
         setChatApiUrl(cUrl)
         setChatApiKey(cKey)
+        setChatThinking(cThinking)
+        setSummaryDepth(cDepth)
         setAsrProvider(provider)
         setAsrModel(amodel)
         setAsrApiUrl(asrUrl)
@@ -230,6 +236,8 @@ function OptionsIndex() {
         await storage.set("chatModel", chatModel)
         await storage.set("chatApiUrl", chatApiUrl)
         await storage.set("chatApiKey", chatApiKey)
+        await storage.set("chatThinking", chatThinking)
+        await storage.set("summaryDepth", summaryDepth)
         await storage.set("asrProvider", asrProvider)
         await storage.set("asrModel", asrModel)
         await storage.set("asrApiUrl", asrApiUrl)
@@ -372,6 +380,33 @@ function OptionsIndex() {
                                 placeholder={t("options.placeholders.chatApiKey", { provider: chatProvider })}
                             />
                             <p className="text-xs text-amber-600 dark:text-amber-500 mt-1.5">{t("options.keySafetyHint")}</p>
+                        </div>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={chatThinking}
+                                    onChange={(e) => setChatThinking(e.target.checked)}
+                                    className="mt-0.5 w-4 h-4 accent-blue-600 cursor-pointer"
+                                />
+                                <span>
+                                    <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">{t("options.labels.chatThinking")}</span>
+                                    <span className="block text-xs text-gray-500 mt-0.5 leading-relaxed">{t("options.hints.chatThinking")}</span>
+                                </span>
+                            </label>
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">{t("options.labels.summaryDepth")}</label>
+                                <select
+                                    value={summaryDepth}
+                                    onChange={(e) => setSummaryDepth(e.target.value as "deep" | "concise")}
+                                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                >
+                                    <option value="deep">{t("options.depthOptions.deep")}</option>
+                                    <option value="concise">{t("options.depthOptions.concise")}</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1.5">{t("options.hints.summaryDepth")}</p>
+                            </div>
                         </div>
 
                         <div className="mt-2 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">

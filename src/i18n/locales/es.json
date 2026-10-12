@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "No hay contenido disponible para resumir.",
       "noAudio": "Este video no admite extracción de audio.",
-      "transcriptionEmpty": "El resultado de la transcripción está vacío.", "weakModel": "El modelo de IA no tiene capacidad suficiente para resumir el contenido de este video."
+      "transcriptionEmpty": "El resultado de la transcripción está vacío.",
+      "weakModel": "El modelo de IA no tiene capacidad suficiente para resumir el contenido de este video."
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "DESVÍO / OMISIÓN",
     "errors": {
       "noComments": "No hay comentarios disponibles para analizar.",
-      "needSubtitle": "Por favor obtén primero los subtítulos del video (Resumen o Resumir vía ASR) antes de analizar comentarios.", "weakModel": "El modelo de IA no tiene capacidad suficiente para analizar los comentarios."
+      "needSubtitle": "Por favor obtén primero los subtítulos del video (Resumen o Resumir vía ASR) antes de analizar comentarios.",
+      "weakModel": "El modelo de IA no tiene capacidad suficiente para analizar los comentarios."
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "Activar razonamiento (Thinking)",
+      "summaryDepth": "Modo de resumen"
     },
     "placeholders": {
       "chatApiKey": "Introduce la API Key de {{provider}}",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "Activado: mayor calidad, más lento. Desactivado: más rápido, menor calidad.",
+      "summaryDepth": "La versión detallada es más completa; la concisa es más rápida y el resumen (fullDigest) ronda los 500 caracteres."
+    },
+    "depthOptions": {
+      "deep": "Detallada (completa, predeterminada)",
+      "concise": "Conciso (más rápido, ~500 caracteres)"
+    }
   },
   "exportTargets": {
     "notion": "Notion",

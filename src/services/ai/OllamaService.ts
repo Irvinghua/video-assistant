@@ -4,8 +4,13 @@ import type { ChatMessage } from "./types"
 export class OllamaService extends BaseAIService {
     private endpointUrl: string
 
-    constructor(apiKey: string, modelName: string = "glm-5.1", endpointUrl: string = "https://ollama.com/api/chat") {
-        super(apiKey, modelName)
+    constructor(
+        apiKey: string,
+        modelName: string = "glm-5.1",
+        endpointUrl: string = "https://ollama.com/api/chat",
+        thinking: boolean = false
+    ) {
+        super(apiKey, modelName, thinking)
         this.endpointUrl = endpointUrl
     }
 
@@ -20,7 +25,11 @@ export class OllamaService extends BaseAIService {
             messages: msgs,
             stream: false,
             // Grammar-constrained decoding: ask Ollama to emit valid JSON.
-            format: "json"
+            format: "json",
+            // `think` disables reasoning models from spending tokens on
+            // internal reasoning before answering (they run regardless of
+            // the user's toggle; see the options hint).
+            think: this.thinking
         })
 
         // Ollama Cloud does not send CORS headers, so a direct fetch from a

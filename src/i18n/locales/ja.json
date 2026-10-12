@@ -51,7 +51,8 @@
     "errors": {
       "noContent": "要約する内容がありません。",
       "noAudio": "この動画は音声抽出に対応していません。",
-      "transcriptionEmpty": "文字起こし結果が空です。", "weakModel": "AIモデルの能力が低く、この動画の内容を正常に要約できません。"
+      "transcriptionEmpty": "文字起こし結果が空です。",
+      "weakModel": "AIモデルの能力が低く、この動画の内容を正常に要約できません。"
     }
   },
   "asr": {
@@ -91,7 +92,8 @@
     "miss": "盲点 / 溢出",
     "errors": {
       "noComments": "分析できるコメントがありません。",
-      "needSubtitle": "コメント分析の前に、まず動画字幕を取得してください（要約 または ASRで要約）。", "weakModel": "AIモデルの能力が低く、この動画のコメントを正常に分析できません。"
+      "needSubtitle": "コメント分析の前に、まず動画字幕を取得してください（要約 または ASRで要約）。",
+      "weakModel": "AIモデルの能力が低く、この動画のコメントを正常に分析できません。"
     }
   },
   "askAI": {
@@ -146,7 +148,9 @@
       "obsidianVault": "Obsidian Vault Name",
       "obsidianFolder": "Obsidian Target Folder (optional)",
       "exportTarget": "Export Target",
-      "exportStructure": "Export Structure"
+      "exportStructure": "Export Structure",
+      "chatThinking": "思考（Thinking）を有効化",
+      "summaryDepth": "要約の出力モード"
     },
     "placeholders": {
       "chatApiKey": "{{provider}} の API Key を入力",
@@ -201,7 +205,15 @@
       "note": "❗ Obsidian desktop must be installed; a wrong Vault name will fail to open or write to the wrong vault.",
       "done": "Then click “Save all settings” and use “Send to Obsidian” in the video sidebar."
     },
-    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)"
+    "keySafetyHint": "(All keys are stored only in your local browser and are never uploaded to any server — please keep them safe!)",
+    "hints": {
+      "chatThinking": "オン：生成品質が高いが遅い。オフ：速いが品質は低下。",
+      "summaryDepth": "詳細版はより詳しく、簡易版は高速で要約（fullDigest）は約500字。"
+    },
+    "depthOptions": {
+      "deep": "詳細版（詳細・既定）",
+      "concise": "簡易版（高速・約500字）"
+    }
   },
   "exportTargets": {
     "notion": "Notion",
