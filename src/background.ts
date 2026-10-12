@@ -84,10 +84,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 })
 
-// ─── Fast CC presence check: read the player's caption tracklist ───
+// ─── Fast CC presence check: read the player's caption metadata ───
 // Lets the caller skip the slow toggle+intercept path (and its 20s timeout)
-// when a video simply has no captions. Language-independent: reads the player
-// API + the structured-description transcript section, never button text.
+// when a video simply has no captions. Language-independent: reads the player's
+// own PlayerResponse (authoritative captionTracks) + the structured-description
+// transcript section, never button text.
+//
+// NOTE (2026 web player): the legacy `getOption("captions","tracklist")` no
+// longer lists ASR-only tracks (returns [] for auto-caption-only videos), so it
+// is demoted to a weak fallback. `movie_player.getPlayerResponse().captions`
+// remains reliable for both manual and ASR tracks.
 async function checkYouTubeCaptionsTracklist(tabId: number, sendResponse: (r: any) => void) {
     try {
         const results = await chrome.scripting.executeScript({
@@ -96,20 +102,41 @@ async function checkYouTubeCaptionsTracklist(tabId: number, sendResponse: (r: an
             func: () => {
                 return new Promise<{ hasCC: boolean }>((resolve) => {
                     const mp = document.getElementById("movie_player") as any
-                    if (!mp || !mp.getOption) { resolve({ hasCC: false }); return }
-                    // Caption module is lazy-loaded; nudge it so the tracklist populates.
+                    if (!mp) { resolve({ hasCC: false }); return }
+                    // Caption module is lazy-loaded; nudge it so toggling works later.
                     try { mp.loadModule && mp.loadModule("captions") } catch { }
+
+                    // Primary: the player's own PlayerResponse exposes the
+                    // authoritative caption track list (manual AND asr).
+                    const trackCount = (): number => {
+                        try {
+                            const pr = mp.getPlayerResponse && mp.getPlayerResponse()
+                            const c = pr && pr.captions && pr.captions.playerCaptionsTracklistRenderer
+                            const tracks = c && c.captionTracks
+                            return Array.isArray(tracks) ? tracks.length : 0
+                        } catch { return 0 }
+                    }
+                    // Secondary language-independent positive signals (structured
+                    // description transcript section / its engagement panel).
+                    const hasTranscriptSection = (): boolean =>
+                        !!document.querySelector("ytd-video-description-transcript-section-renderer")
+                        || !!document.querySelector('[target-id="engagement-panel-searchable-transcript"]')
+
+                    const done = (v: boolean) => resolve({ hasCC: v })
+                    if (trackCount() > 0 || hasTranscriptSection()) { done(true); return }
+
                     const t0 = Date.now()
                     const check = () => {
-                        let list: any = null
-                        try { list = mp.getOption("captions", "tracklist") } catch { }
-                        // Secondary language-independent positive signals (structured
-                        // description transcript section / its engagement panel).
-                        const section = !!document.querySelector("ytd-video-description-transcript-section-renderer")
-                            || !!document.querySelector('[target-id="engagement-panel-searchable-transcript"]')
-                        if ((Array.isArray(list) && list.length > 0) || section) { resolve({ hasCC: true }); return }
-                        // Give the lazy module up to 4s to report tracks before concluding "none".
-                        if (Date.now() - t0 > 4000) { resolve({ hasCC: false }); return }
+                        if (trackCount() > 0 || hasTranscriptSection()) { done(true); return }
+                        // Weak fallback: legacy player API. Kept only because it may
+                        // still report manual tracks earlier than the PlayerResponse.
+                        try {
+                            const list = mp.getOption && mp.getOption("captions", "tracklist")
+                            if (Array.isArray(list) && list.length > 0) { done(true); return }
+                        } catch { }
+                        // Give the player up to 4s to publish caption metadata before
+                        // concluding "none".
+                        if (Date.now() - t0 > 4000) { done(false); return }
                         setTimeout(check, 300)
                     }
                     check()
@@ -173,6 +200,17 @@ async function handleYouTubeSubtitles(videoId: string, tabId: number, sendRespon
                 if (!(window as any).__vaInterceptorInstalled) {
                     ;(window as any).__vaInterceptorInstalled = true
                     ;(window as any).__vaTimedText = null
+
+                    const captureTimedText = (url: string, body: string) => {
+                        if (!body || body.length <= 100) return
+                        const m = url.match(/[?&]v=([^&]+)/)
+                        const videoId = m ? m[1] : ""
+                        ;(window as any).__vaTimedText = { videoId, body, timestamp: Date.now() }
+                        window.postMessage({ type: "VA_TIMEDTEXT_RESULT", videoId, body }, "*")
+                    }
+                    const isTimedText = (url: string) => url.includes("/api/timedtext") && url.includes("v=")
+
+                    // Arm 1: XHR (the 2026 web player currently uses XHR)
                     const origOpen = XMLHttpRequest.prototype.open
                     const origSend = XMLHttpRequest.prototype.send
                     XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: any[]) {
@@ -181,33 +219,66 @@ async function handleYouTubeSubtitles(videoId: string, tabId: number, sendRespon
                     }
                     XMLHttpRequest.prototype.send = function (...args: any[]) {
                         const url: string = (this as any)._vaUrl || ""
-                        if (url.includes("/api/timedtext") && url.includes("v=")) {
+                        if (isTimedText(url)) {
                             this.addEventListener("load", function () {
-                                if (this.responseText && this.responseText.length > 100) {
-                                    const m = url.match(/[?&]v=([^&]+)/)
-                                    ;(window as any).__vaTimedText = { videoId: m ? m[1] : "", body: this.responseText, timestamp: Date.now() }
-                                    window.postMessage({ type: "VA_TIMEDTEXT_RESULT", videoId: m ? m[1] : "", body: this.responseText }, "*")
-                                }
+                                captureTimedText(url, this.responseText)
                             })
                         }
                         return origSend.apply(this, args)
                     }
+
+                    // Arm 2: fetch (future-proofing — harmless if the player never
+                    // uses it for timedtext)
+                    const origFetch = (window as any).fetch
+                    if (typeof origFetch === "function") {
+                        ;(window as any).fetch = function (input: any, init?: any) {
+                            const url = typeof input === "string" ? input : (input && input.url) || ""
+                            const p = origFetch.call(this, input, init)
+                            if (isTimedText(url)) {
+                                p.then((res: any) => {
+                                    res.clone().text().then((body: string) => captureTimedText(url, body)).catch(() => { })
+                                }).catch(() => { })
+                            }
+                            return p
+                        }
+                    }
                 }
 
-                // Toggle subtitles to trigger the timedtext XHR. The caller
-                // (hasCaptions) has already confirmed the caption module is
-                // loaded and the tracklist is populated before reaching here,
-                // so we can toggle directly without re-polling for readiness.
+                // Trigger a timedtext fetch. The caller (hasCaptions) has
+                // already confirmed caption tracks exist. Two steps, because the
+                // 2026 web player caches caption data:
+                //   1) Make sure captions are ON — the player only requests a
+                //      track when it needs to render one.
+                //   2) Force a reload so we get a *fresh* network request even
+                //      when the current track is already cached (a plain off/on
+                //      toggle often produces no request at all).
                 const mp = document.getElementById("movie_player") as any
-                if (mp?.toggleSubtitles) {
-                    try { mp.loadModule?.("captions") } catch { }
-                    const wasOn = mp.isSubtitlesOn?.()
-                    if (wasOn) {
-                        mp.toggleSubtitles()
-                        setTimeout(() => mp.toggleSubtitles(), 250)
-                    } else {
-                        mp.toggleSubtitles()
-                        setTimeout(() => { if (mp.isSubtitlesOn?.()) mp.toggleSubtitles() }, 4000)
+                if (mp) {
+                    try { mp.loadModule && mp.loadModule("captions") } catch { }
+
+                    let turnedOn = false
+                    try {
+                        if (typeof mp.isSubtitlesOn === "function" && !mp.isSubtitlesOn()) {
+                            if (typeof mp.toggleSubtitles === "function") { mp.toggleSubtitles(); turnedOn = true }
+                            else if (typeof mp.toggleSubtitlesOn === "function") { mp.toggleSubtitlesOn(); turnedOn = true }
+                        }
+                    } catch { }
+
+                    try { mp.setOption && mp.setOption("captions", "reload", true) } catch { }
+
+                    // If we had to turn captions on for the user, restore their
+                    // original state once the data is captured (or after 15s).
+                    if (turnedOn && !(window as any).__vaRestoreTimer) {
+                        const startedAt = Date.now()
+                        ;(window as any).__vaRestoreTimer = setInterval(() => {
+                            const cap = (window as any).__vaTimedText
+                            const captured = cap && cap.videoId === vid
+                            if (captured || Date.now() - startedAt > 15000) {
+                                clearInterval((window as any).__vaRestoreTimer)
+                                ;(window as any).__vaRestoreTimer = null
+                                try { if (mp.isSubtitlesOn && mp.isSubtitlesOn()) mp.toggleSubtitles() } catch { }
+                            }
+                        }, 1000)
                     }
                 }
             },
