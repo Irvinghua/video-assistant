@@ -1,7 +1,7 @@
 {
   "name": "video-assistant",
   "displayName": "Video assistant",
-  "version": "0.0.1",
+  "version": "1.1.0",
   "description": "A Chrome extension that summarizes video content and analyzes comments on Bilibili and YouTube",
   "author": "Plasmo Corp. <foss@plasmo.com>",
   "scripts": {
